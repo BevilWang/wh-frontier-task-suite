@@ -1,9 +1,9 @@
 {
   "name": "wh-frontier-task-suite",
-  "version": "0.2.0",
-  "description": "Create, independently review, and repair three-task Frontier-Bench submissions for wh.",
+  "version": "0.3.0",
+  "description": "Create, independently review, and repair three-task Frontier-Bench submissions.",
   "author": {
-    "name": "wh"
+    "name": "BevilWang"
   },
   "keywords": [
     "frontier-bench",
@@ -16,7 +16,7 @@
     "displayName": "WH Frontier Task Suite",
     "shortDescription": "Create, review, and repair Frontier-Bench tasks.",
     "longDescription": "A three-stage Codex workflow for creating three original Frontier-Bench tasks, auditing them with an independent second AI, repairing every evidence-backed finding, and returning the corrected submission to fresh independent review.",
-    "developerName": "wh",
+    "developerName": "BevilWang",
     "category": "Developer Tools",
     "capabilities": [
       "Write",

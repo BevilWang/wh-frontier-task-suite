@@ -1,6 +1,6 @@
 ---
 name: verify-wh-frontier-tasks
-description: Independently audit the three-task Frontier-Bench/Harbor submission produced for wh by another AI, using a fresh second AI with no creator conclusions plus deterministic evidence, oracle/nop/static results, originality comparison, specification-test alignment, leakage and verifier-security checks. Use when asked to verify, review, double-check, accept, reject, or quality-gate outputs from create-wh-frontier-tasks or any wh_提交 benchmark package without modifying the submitted tasks.
+description: Independently audit a three-task Frontier-Bench/Harbor submission produced by another AI, using a fresh second AI with no creator conclusions plus deterministic evidence, oracle/nop/static results, originality comparison, specification-test alignment, leakage, and verifier-security checks. Use when asked to verify, review, double-check, accept, reject, or quality-gate outputs from create-wh-frontier-tasks or any benchmark submission package without modifying the submitted tasks.
 ---
 
 # Verify WH Frontier Tasks

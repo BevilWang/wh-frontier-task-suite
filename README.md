@@ -1,36 +1,45 @@
 # WH Frontier Task Suite
 
-一个面向 Frontier-Bench / Harbor 任务生产的 Codex 插件，提供“创作 → 独立二审 → 报告驱动修复 → 独立复审”的完整工作流。
+WH Frontier Task Suite is a Codex plugin for authoring, independently reviewing, and repairing Frontier-Bench/Harbor benchmark submissions.
 
-插件内置任务规范和 7 个参考方向的能力画像，**不需要读取 Fellow 认领表、claim sheet 或其他 assignment PDF**。
+It turns a reference task into a disciplined four-stage workflow:
 
-## Skills
+```text
+Author three original tasks -> independent review -> evidence-driven repair -> fresh re-review
+```
+
+The plugin combines procedural skills with deterministic helper scripts for submission scaffolding, structural validation, evidence snapshots, review reports, and repair ledgers.
+
+## What is included
 
 ### `$create-wh-frontier-tasks`
 
-从一个受支持的 Frontier-Bench 参考题中提炼难度机制，创作、实现、验证并打包 3 个原创任务。它负责：
+Creates, implements, validates, and packages exactly three original benchmark tasks from one supported reference. The skill covers:
 
-- 新颖性与难度设计；
-- `instruction.md`、`task.toml`、`environment/`、`solution/`、`tests/`；
-- oracle/nop、静态检查、泄漏与抗投机检查；
-- 提交目录和 zip 打包。
+- concept design and originality gates;
+- task instructions, metadata, environment, oracle solution, and verifier tests;
+- static checks, oracle/nop runs, leakage checks, and shortcut resistance;
+- submission layout and reproducible archive generation.
 
 ### `$verify-wh-frontier-tasks`
 
-让一个没有继承创作上下文的新 AI 对候选任务进行只读二审。它负责：
+Runs a read-only second review with a fresh AI reviewer and deterministic evidence. It checks:
 
-- 记录提交与参考题指纹；
-- 运行静态、oracle、nop 和必要的攻击测试；
-- 检查原创性、可解性、题面—测试一致性、验证器质量和隔离安全；
-- 生成 `review.json`、`review.md` 和 `PASS` / `FAIL` / `PROVISIONAL` 结论。
+- originality relative to the selected reference;
+- specification-to-test alignment;
+- clean-build solvability and nop resistance;
+- verifier quality, isolation, leakage, security, and packaging;
+- source immutability throughout the review.
+
+The review produces `evidence.json`, `review.json`, and `review.md`, with an overall verdict of `PASS`, `FAIL`, or `PROVISIONAL`.
 
 ### `$repair-wh-frontier-tasks`
 
-读取独立二审报告，逐条复现 finding，修复根因并建立 repair ledger。修复完成后必须交给另一个新的 AI 使用 `$verify-wh-frontier-tasks` 复审，不能自行宣布通过。
+Consumes an independent review, verifies that it matches the current source fingerprint, reproduces each finding, repairs root causes, runs the full regression gate, and produces an auditable repair ledger. A repaired submission must return to a fresh reviewer before it can be accepted.
 
-## 支持的 7 个参考方向
+## Supported reference tasks
 
-| 方向 | 参考题 |
+| Domain | Reference task |
 | --- | --- |
 | Software / Databases | `wal-recovery-ordering` |
 | Software / Data Engineering | `ontology-kg-querying` |
@@ -40,51 +49,69 @@
 | ML / Inference | `vllm-deepseek-streaming` |
 | Science / Robotics | `biped-contact-dynamics` |
 
-7 个方向的可复制中文提示词，以及二审、修复、复审和最终打包提示词，见 [docs/prompts.zh-CN.md](docs/prompts.zh-CN.md)。
+Each reference profile preserves only transferable difficulty mechanisms. New tasks must use original objectives, systems or data, reasoning paths, artifacts, hidden variations, and verifier logic.
 
-## 安装
+## Installation
 
-需要带有 `plugin` 子命令的 Codex CLI。
+Install the repository as a Git marketplace, then install the plugin:
 
 ```bash
 codex plugin marketplace add BevilWang/wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-安装或更新后请新建一个 Codex 任务，使新 skills 进入上下文。
+Start a new Codex task after installation so the three skills are loaded into context.
 
-更新 marketplace 和插件：
+To update:
 
 ```bash
 codex plugin marketplace upgrade wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-## 推荐工作流
+## Quick start
 
-1. 新建任务 A，用 `$create-wh-frontier-tasks` 生成候选任务。
-2. 新建任务 B，只提供原始候选目录、参考题目录和输出目录，用 `$verify-wh-frontier-tasks` 独立二审。
-3. 若结论不是 `PASS`，在可写任务中用 `$repair-wh-frontier-tasks` 修复。
-4. 新建任务 C，用 `$verify-wh-frontier-tasks` 独立复审。
-5. 只有复审为 `PASS` 才能打包；`PROVISIONAL` 不等于通过。
+1. Clone or otherwise provide a local Frontier-Bench checkout.
+2. Choose one supported reference task.
+3. Open a new Codex task and invoke `$create-wh-frontier-tasks` with the reference path and an output directory.
+4. Open a separate Codex task with no authoring context and invoke `$verify-wh-frontier-tasks`.
+5. If the verdict is not `PASS`, invoke `$repair-wh-frontier-tasks` in a writable task.
+6. Run `$verify-wh-frontier-tasks` again in another fresh task.
+7. Package only after the fresh review returns `PASS`. `PROVISIONAL` is not a pass.
 
-## 仓库结构
+Ready-to-copy prompts for all seven reference domains and every workflow stage are available in [docs/prompts.md](docs/prompts.md).
+
+## Repository layout
 
 ```text
 .
-├── .agents/plugins/marketplace.json
-├── docs/prompts.zh-CN.md
-└── plugins/wh-frontier-task-suite/
-    ├── .codex-plugin/plugin.json
-    └── skills/
-        ├── create-wh-frontier-tasks/
-        ├── verify-wh-frontier-tasks/
-        └── repair-wh-frontier-tasks/
+|-- .agents/plugins/marketplace.json
+|-- docs/prompts.md
+`-- plugins/wh-frontier-task-suite/
+    |-- .codex-plugin/plugin.json
+    `-- skills/
+        |-- create-wh-frontier-tasks/
+        |-- verify-wh-frontier-tasks/
+        `-- repair-wh-frontier-tasks/
 ```
 
-## 本地验证
+## Output contract
 
-三个技能都带有确定性辅助脚本和单元测试：
+The authoring skill creates:
+
+```text
+OWNER_submission/
+|-- README.md
+|-- task-1-short-name/
+|-- task-2-short-name/
+`-- task-3-short-name/
+```
+
+Each task contains `instruction.md`, `task.toml`, `environment/`, `solution/`, and `tests/`. The packaged archive is named `OWNER_Category_Subcategory_YYYYMMDD.zip`.
+
+## Local validation
+
+Run the bundled unit tests:
 
 ```bash
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts -p "test_*.py"
@@ -92,11 +119,13 @@ python -m unittest discover -s plugins/wh-frontier-task-suite/skills/verify-wh-f
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/repair-wh-frontier-tasks/scripts -p "test_*.py"
 ```
 
-插件开发源由 `plugin-creator` 的 `validate_plugin.py` 验证；每个 skill 由 `skill-creator` 的 `quick_validate.py` 验证。
+During plugin development, validate the plugin with `plugin-creator/scripts/validate_plugin.py` and validate each skill with `skill-creator/scripts/quick_validate.py` from a Codex installation.
 
-## 隐私与安全
+## Review integrity
 
-- 插件不会要求读取认领表或 assignment PDF。
-- 独立二审默认不修改候选任务。
-- 不应把隐藏测试、oracle 真值或私密数据发送到外部服务。
-- 所有“通过”结论都必须对应实际运行证据，未运行的必需检查不能标为通过。
+- The independent reviewer receives raw artifacts, not the author's conclusions.
+- Commands that may write run against disposable copies.
+- Required runtime checks cannot be replaced by source inspection.
+- Hidden verifier data and oracle internals stay out of human-facing reports.
+- A missing required runtime check yields `PROVISIONAL`, unless observed defects already require `FAIL`.
+- A repaired submission always returns to a fresh independent reviewer.

@@ -9,9 +9,9 @@ Produce a submission that another agent can solve and a separate verifier can gr
 
 ## Establish inputs
 
-Require one supported reference name and a local Frontier-Bench checkout. Default the owner to `wh`, the contact to `wanghan.scut@gmail.com`, and the modality to text unless the user provides different values. Obtain a real submission date and output directory before final packaging; never invent other personal details.
+Require one supported reference name, a local Frontier-Bench checkout, an owner, a contact, a real submission date, and an output directory. Default the modality to text unless the user provides a different value. Never invent personal details.
 
-Read [references/reference-profiles.md](references/reference-profiles.md) for the selected reference. Then inspect its `instruction.md`, `task.toml`, `README.md`, `environment/`, `solution/`, and `tests/` in that order. Read [references/frontier-standards.md](references/frontier-standards.md) before designing or validating tasks. Do not require or read a claim sheet or assignment PDF.
+Read [references/reference-profiles.md](references/reference-profiles.md) for the selected reference. Then inspect its `instruction.md`, `task.toml`, `README.md`, `environment/`, `solution/`, and `tests/` in that order. Read [references/frontier-standards.md](references/frontier-standards.md) before designing or validating tasks.
 
 Treat the checked-out repository as the current source of truth when it conflicts with examples in the references. Do not browse for or copy task-specific solutions.
 
@@ -39,12 +39,12 @@ Run:
 
 ```text
 python scripts/submission_tool.py init OUTPUT_PARENT \
-  --owner wh --contact wanghan.scut@gmail.com --category CATEGORY --subcategory SUBCATEGORY \
+  --owner OWNER --contact CONTACT --category CATEGORY --subcategory SUBCATEGORY \
   --reference REFERENCE --reference-link REFERENCE_LINK --date YYYYMMDD \
   --slug FIRST_SLUG --slug SECOND_SLUG --slug THIRD_SLUG
 ```
 
-Use lowercase hyphenated slugs. The command creates `wh_提交/README.md` and exactly three task directories. Replace every `TODO` and tailor every generated file; the skeleton is not a completed task.
+Use lowercase hyphenated slugs. The command creates `OWNER_submission/README.md` and exactly three task directories. Replace every `TODO` and tailor every generated file; the skeleton is not a completed task.
 
 ## Implement each task
 
@@ -76,7 +76,7 @@ Use the repository commands in [references/frontier-standards.md](references/fro
 Run the bundled static validator from the skill directory:
 
 ```text
-python scripts/submission_tool.py validate PATH_TO/wh_提交
+python scripts/submission_tool.py validate PATH_TO/OWNER_submission
 ```
 
 Fix every `ERROR`. Review each `WARNING` instead of suppressing it.
@@ -88,7 +88,7 @@ Update the package `README.md` with owner/contact, reference name and link, one-
 Package only after validation succeeds:
 
 ```text
-python scripts/submission_tool.py package PATH_TO/wh_提交 \
+python scripts/submission_tool.py package PATH_TO/OWNER_submission \
   --category CATEGORY --subcategory SUBCATEGORY --date YYYYMMDD
 ```
 

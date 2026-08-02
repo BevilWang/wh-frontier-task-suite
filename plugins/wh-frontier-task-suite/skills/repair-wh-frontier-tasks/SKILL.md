@@ -1,6 +1,6 @@
 ---
 name: repair-wh-frontier-tasks
-description: Read an independent second-AI review.json/review.md for a wh Frontier-Bench/Harbor three-task submission, verify that the report matches the current source fingerprint, reproduce and triage every finding, implement root-cause fixes across instructions, task metadata, environment, oracle solution, verifier tests, and packaging, rerun static/oracle/nop checks, and prepare the corrected submission for a fresh independent re-review. Use when asked to fix, address, resolve, remediate, or iterate on findings produced by verify-wh-frontier-tasks without blindly accepting stale or unsupported reviewer claims.
+description: Read an independent second-AI review.json/review.md for a Frontier-Bench/Harbor three-task submission, verify that the report matches the current source fingerprint, reproduce and triage every finding, implement root-cause fixes across instructions, task metadata, environment, oracle solution, verifier tests, and packaging, rerun static/oracle/nop checks, and prepare the corrected submission for a fresh independent re-review. Use when asked to fix, address, resolve, remediate, or iterate on findings produced by verify-wh-frontier-tasks without blindly accepting stale or unsupported reviewer claims.
 ---
 
 # Repair WH Frontier Tasks

@@ -20,7 +20,7 @@ Repair missing files, names, metadata, canary, absolute paths, README fields, an
 
 ## Originality and difficulty
 
-Concept-level failures require concept-level changes. Rewrite the objective, data/system, core reasoning, artifact, hidden variation, or verifier—not just names or constants. Recheck all three tasks for accidental convergence after redesign. Ensure an expert solution remains achievable in hours.
+Concept-level failures require concept-level changes. Rewrite the objective, data/system, core reasoning, artifact, hidden variation, or verifier, not just names or constants. Recheck all three tasks for accidental convergence after redesign. Ensure an expert solution remains achievable in hours.
 
 ## Specification-test alignment
 

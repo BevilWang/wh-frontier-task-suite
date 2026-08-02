@@ -13,8 +13,8 @@ Use the live checkout as the source of truth. Relevant files are:
 
 - Produce exactly three original tasks from one selected reference/subcategory.
 - Keep the three tasks in one modality where practical.
-- Name the archive `姓名_Category_Subcategory_YYYYMMDD.zip`.
-- Put `README.md` and exactly three `task-N-short-name/` directories under `姓名_提交/`.
+- Name the archive `OWNER_Category_Subcategory_YYYYMMDD.zip`.
+- Put `README.md` and exactly three `task-N-short-name/` directories under `OWNER_submission/`.
 - Put `instruction.md`, `task.toml`, `environment/`, `solution/`, and `tests/` in every task.
 - State owner/contact, reference name/link, three one-line summaries, modality, and local validation status in the package README.
 - Never copy reference data, answers, or tests; never submit a renamed or constant-swapped task.

@@ -39,7 +39,7 @@ class SubmissionToolTest(unittest.TestCase):
         )
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(submission_tool.cmd_init(args), 0)
-        return parent / "wh_提交"
+        return parent / "wh_submission"
 
     def complete_placeholders(self, root: Path) -> None:
         for path in root.rglob("*"):
@@ -76,7 +76,7 @@ class SubmissionToolTest(unittest.TestCase):
                 self.assertEqual(submission_tool.cmd_package(args), 0)
             with zipfile.ZipFile(archive_path) as archive:
                 names = archive.namelist()
-            self.assertIn("wh_提交/README.md", names)
+            self.assertIn("wh_submission/README.md", names)
             self.assertEqual(sum(name.endswith("/task.toml") for name in names), 3)
 
 

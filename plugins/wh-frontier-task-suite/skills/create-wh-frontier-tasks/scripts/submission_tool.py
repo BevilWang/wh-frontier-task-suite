@@ -98,7 +98,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         if not SLUG_RE.fullmatch(slug):
             raise SystemExit(f"invalid slug: {slug!r}")
 
-    root = Path(args.output_parent).resolve() / f"{args.owner}_提交"
+    root = Path(args.output_parent).resolve() / f"{args.owner}_submission"
     if root.exists():
         raise SystemExit(f"refusing to overwrite existing submission: {root}")
     root.mkdir(parents=True)
@@ -272,7 +272,7 @@ def cmd_package(args: argparse.Namespace) -> int:
     if status:
         print("Refusing to package an invalid submission.", file=sys.stderr)
         return status
-    owner = root.name.removesuffix("_提交")
+    owner = root.name.removesuffix("_submission")
     archive_name = "_".join(
         (safe_component(owner), safe_component(args.category), safe_component(args.subcategory), args.date)
     ) + ".zip"
