@@ -85,7 +85,7 @@ Codex 应用仍会对插件发起的命令应用当前项目的 sandbox 与审�
 
 内置参考包使用短物理路径，公开的参考名保持不变。解析器基于 `pathlib` 和宿主系统原生路径语义，同时支持 Windows、macOS 和 Linux。
 
-仓库 CI 在三种系统上执行单元测试、参考包解析、插件发布校验和 Windows 路径预算检查。所有受 Git 跟踪的相对路径限制在 180 个字符以内，为 Codex 插件缓存和默认 Windows `MAX_PATH` 留出余量。
+仓库 CI 在三种系统上执行单元测试、参考包解析、插件发布校验和 Windows 路径预算检查。所有待发布相对路径限制在 135 个字符以内，并以关闭 `core.longpaths` 的深目录干净下载作为 Windows 发布门，为 Codex 插件缓存和默认 Windows `MAX_PATH` 留出余量。
 
 ## 本地发布验证
 

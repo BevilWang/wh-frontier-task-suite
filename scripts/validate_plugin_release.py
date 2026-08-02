@@ -23,6 +23,17 @@ def load_json(path: Path) -> dict:
         return json.load(handle)
 
 
+def iter_strings(value: object):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from iter_strings(item)
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from iter_strings(item)
+
+
 def validate_release(root: Path) -> list[str]:
     errors: list[str] = []
     plugin_root = root / "plugins" / PLUGIN_NAME
@@ -106,6 +117,16 @@ def validate_release(root: Path) -> list[str]:
             errors.append(f"skill name does not match directory: {skill_path}")
         if re.search(r"git\s+config[^\n]*core\.longpaths", text, re.IGNORECASE):
             errors.append(f"skill must not require Git long-path configuration: {skill_path}")
+
+    vectors_path = plugin_root / "fb" / "t" / "rs" / "tests" / "fixtures" / "vectors.json"
+    try:
+        vectors = load_json(vectors_path)
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"cannot read rs fixture vectors: {exc}")
+    else:
+        for relative in sorted({item for item in iter_strings(vectors) if item.startswith("files/")}):
+            if not (vectors_path.parent / relative).is_file():
+                errors.append(f"rs fixture vector points at a missing file: {relative}")
 
     readme = (root / "README.md").read_text(encoding="utf-8")
     if "codex plugin marketplace add" in readme or "codex plugin add" in readme:

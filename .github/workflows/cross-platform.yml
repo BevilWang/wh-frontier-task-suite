@@ -34,3 +34,9 @@ jobs:
         run: python scripts/validate_plugin_release.py
       - name: Validate Windows-safe repository paths
         run: python scripts/validate_windows_paths.py
+      - name: Verify default Windows Git checkout from a deep app-like cache path
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'codex-app-cache\personal\wh-frontier-task-suite\0.7.0-codex-release-verification\workspace\repository'
+          git -c core.longpaths=false clone --no-hardlinks . $target

@@ -37,6 +37,9 @@ class PluginReleaseValidationTest(unittest.TestCase):
             },
         }
         (plugin / ".codex-plugin" / "plugin.json").write_text(json.dumps(manifest), encoding="utf-8")
+        vectors = plugin / "fb" / "t" / "rs" / "tests" / "fixtures"
+        vectors.mkdir(parents=True)
+        (vectors / "vectors.json").write_text("{}", encoding="utf-8")
         marketplace_dir = root / ".agents" / "plugins"
         marketplace_dir.mkdir(parents=True)
         marketplace = {
@@ -81,4 +84,3 @@ class PluginReleaseValidationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
