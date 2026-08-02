@@ -1,6 +1,6 @@
 # Frontier-Bench authoring and submission standards
 
-Use the live checkout as the source of truth. Relevant files are:
+Use the bundled Frontier-Bench snapshot as the default source of truth. Use an external checkout only when the user explicitly supplies it. Relevant files are:
 
 - `CONTRIBUTING.md`
 - `docs/task-template.toml`

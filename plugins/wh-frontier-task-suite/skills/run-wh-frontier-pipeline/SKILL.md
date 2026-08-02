@@ -1,6 +1,6 @@
 ---
 name: run-wh-frontier-pipeline
-description: Orchestrate the complete Frontier-Bench task lifecycle inside one Codex task by spawning isolated author, reviewer, repair, re-review, and release subagents. Use when the user wants to create three original tasks from a supported reference and complete independent review and repair without manually opening separate Codex tasks; when coordinating create-wh-frontier-tasks, verify-wh-frontier-tasks, and repair-wh-frontier-tasks; or when resuming a saved pipeline run from its artifact directories.
+description: Orchestrate the complete Frontier-Bench task lifecycle inside one Codex task by spawning isolated author, reviewer, repair, re-review, and release subagents against the plugin's bundled Frontier-Bench references. Use when the user wants to create three original tasks from a supported reference and complete independent review and repair without manually opening separate Codex tasks or cloning Frontier-Bench; when coordinating create-wh-frontier-tasks, verify-wh-frontier-tasks, and repair-wh-frontier-tasks; or when resuming a saved pipeline run from its artifact directories.
 ---
 
 # Run WH Frontier Pipeline
@@ -11,11 +11,12 @@ Run the author-review-repair-release workflow as a coordinator. Keep stage decis
 
 Obtain:
 
-- a supported reference task path;
-- a local Frontier-Bench checkout;
+- a supported reference name;
 - a writable workspace root;
 - owner, contact, and real submission date;
 - an optional maximum repair-round count, defaulting to `2`.
+
+Resolve the default Frontier-Bench root relative to this skill as `../../assets/frontier-bench`, validate it with the creator skill's `validate_reference_bundle.py`, and derive the reference path as `BUNDLED_FRONTIER_ROOT/tasks/REFERENCE`. Use an external Frontier-Bench root only when the user explicitly supplies one and it passes the required structure checks.
 
 Derive one run root under `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` and use the final directory name as `RUN_ID`. Keep author output, reviews, repairs, release artifacts, and `pipeline-state.json` under that root. Record inputs, current state, agent names, artifact paths, verdicts, repair rounds, blockers, and final release metadata without storing hidden answers.
 

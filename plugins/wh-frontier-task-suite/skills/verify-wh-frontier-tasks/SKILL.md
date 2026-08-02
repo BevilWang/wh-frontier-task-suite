@@ -12,9 +12,11 @@ Run a read-only, evidence-backed second review. Keep deterministic validation an
 Require:
 
 - the unpacked submission directory containing one README and exactly three tasks;
-- the selected reference task directory;
-- a local Frontier-Bench checkout;
+- the selected reference name or task directory;
+- the Frontier-Bench root, defaulting to the bundled snapshot at `../../assets/frontier-bench` relative to this skill;
 - a report output directory outside the submission.
+
+When no external root is supplied, resolve the reference as `BUNDLED_FRONTIER_ROOT/tasks/REFERENCE`. Verify that the bundled root contains the selected task, checks, rubrics, taxonomy, and task template before reviewing.
 
 Do not pass creator reasoning, self-evaluation, suspected defects, intended answers, or previous review conclusions to the reviewer. Passing the raw submission, the raw reference, repository standards, and command logs is allowed.
 

@@ -7,13 +7,14 @@ This document contains a one-task multi-agent prompt, domain-specific authoring 
 Replace these placeholders before sending a prompt:
 
 - `<WORKSPACE_ROOT>`: writable directory for generated tasks, reviews, repairs, and deliverables.
-- `<FRONTIER_BENCH_ROOT>`: local Frontier-Bench checkout.
 - `<OWNER>`: submission owner name or handle.
 - `<CONTACT>`: submission contact.
 - `<YYYYMMDD>`: real submission date.
 - `<REFERENCE>`: one of the seven reference task names listed below.
 
 After installing or updating the plugin, start a new Codex task so the skills are loaded.
+
+Every prompt below uses the plugin's bundled Frontier-Bench snapshot. To audit against a different compatible revision, explicitly add `External Frontier-Bench root: <FRONTIER_BENCH_ROOT>` to the prompt.
 
 The coordinator starts reviewers with an empty inherited context and uses filesystem artifacts for handoff.
 
@@ -30,8 +31,8 @@ The coordinator starts reviewers with an empty inherited context and uses filesy
 ```text
 Use $run-wh-frontier-pipeline to run the complete Frontier-Bench lifecycle without asking me to open separate tasks.
 
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/<REFERENCE>
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: <REFERENCE>
+Reference source: bundled plugin snapshot
 Workspace root: <WORKSPACE_ROOT>
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -57,14 +58,14 @@ The following prompts invoke the authoring skill directly. Use them when running
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: Software / Databases
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/wal-recovery-ordering
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: wal-recovery-ordering
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/wal-recovery-ordering
 Owner: <OWNER>
 Contact: <CONTACT>
 Submission date: <YYYYMMDD>
 
-Read the selected reference, the bundled reference profile, the bundled submission standards, and enough high-quality database tasks in the checkout to understand the repository conventions. Preserve only transferable difficulty mechanisms and quality standards.
+Read the selected reference, the bundled reference profile, the bundled submission standards, and enough high-quality bundled database tasks to understand the repository conventions. Preserve only transferable difficulty mechanisms and quality standards.
 
 Create exactly three original tasks centered on database consistency, concurrency, recovery, durability, state isolation, or performance invariants. Each task should contain multi-stage state transitions, independently checkable invariants, meaningful edge cases, and hidden-test generalization. Do not reuse the reference WAL layout, modules, data, constants, APIs, failure story, test vectors, or answers. Renaming entities, changing constants, or reskinning the scenario is not sufficient.
 
@@ -79,8 +80,8 @@ Write all artifacts under the output parent. Run every feasible static, oracle, 
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: Software / Data Engineering
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/ontology-kg-querying
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: ontology-kg-querying
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/ontology-kg-querying
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -101,8 +102,8 @@ Write the full submission under the output parent and execute all feasible valid
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: Software / Algorithms
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/rs-archive-clone
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: rs-archive-clone
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/rs-archive-clone
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -123,8 +124,8 @@ Complete all files and end-to-end validation under the output parent. Report the
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: Science / Math
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/lean-midpoint-proof
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: lean-midpoint-proof
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/lean-midpoint-proof
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -145,8 +146,8 @@ Write all artifacts under the output parent and compile every oracle from a clea
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: Science / Physics
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/ks-solver-cpp
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: ks-solver-cpp
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/ks-solver-cpp
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -167,8 +168,8 @@ Compile, run, and cross-check every task under the output parent. Report command
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: ML / Inference
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/vllm-deepseek-streaming
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: vllm-deepseek-streaming
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/vllm-deepseek-streaming
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -189,8 +190,8 @@ For each task, reproduce the defect, apply the reference fix, and run the comple
 Use $create-wh-frontier-tasks to create a complete three-task Frontier-Bench submission.
 
 Domain: Science / Robotics
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/biped-contact-dynamics
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: biped-contact-dynamics
+Reference source: bundled plugin snapshot
 Output parent: <WORKSPACE_ROOT>/output/biped-contact-dynamics
 Owner: <OWNER>
 Contact: <CONTACT>
@@ -215,8 +216,8 @@ Run this prompt in a fresh Codex task that has no authoring context. Replace `<R
 Use $verify-wh-frontier-tasks to perform an independent, read-only second review.
 
 Submission directory: <WORKSPACE_ROOT>/output/<REFERENCE>/<OWNER>_submission
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/<REFERENCE>
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: <REFERENCE>
+Reference source: bundled plugin snapshot
 Review output: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-1
 
 Act as an independent reviewer, not the author. Do not assume the submission is correct and do not use author self-assessments. Do not modify the submission. Use disposable copies for commands that may write.
@@ -237,8 +238,8 @@ Use $repair-wh-frontier-tasks to inspect and repair the submission from its inde
 
 Submission directory: <WORKSPACE_ROOT>/output/<REFERENCE>/<OWNER>_submission
 Review directory: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-1
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/<REFERENCE>
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: <REFERENCE>
+Reference source: bundled plugin snapshot
 Repair output: <WORKSPACE_ROOT>/repairs/<REFERENCE>/round-1
 
 Validate that the review evidence matches the current submission fingerprint. Treat every reviewer finding as a hypothesis until reproduced. For valid findings, identify and fix the root cause with the smallest complete and maintainable change. For unsupported findings, record reproducible counter-evidence.
@@ -258,8 +259,8 @@ Run phase 1 in another new Codex task after repair. Do not provide the previous 
 Use $verify-wh-frontier-tasks to independently re-review the corrected submission.
 
 Submission directory: <WORKSPACE_ROOT>/output/<REFERENCE>/<OWNER>_submission
-Reference task: <FRONTIER_BENCH_ROOT>/tasks/<REFERENCE>
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: <REFERENCE>
+Reference source: bundled plugin snapshot
 From-scratch review output: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2/from-scratch
 
 Act as a fresh independent reviewer. Review the corrected raw submission from first principles. You have not been given the previous verdict, repair rationale, or expected outcome. Check correctness, originality, difficulty, verifier integrity, leakage, and regressions without modifying the submission.
@@ -288,7 +289,8 @@ Use $create-wh-frontier-tasks to perform final release validation and package th
 
 Reviewed immutable snapshot: <WORKSPACE_ROOT>/release-snapshots/<REFERENCE>/<OWNER>_submission
 Passing review: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2/closure
-Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Reference: <REFERENCE>
+Reference source: bundled plugin snapshot
 Release output: <WORKSPACE_ROOT>/deliverables/<REFERENCE>
 Owner: <OWNER>
 Contact: <CONTACT>

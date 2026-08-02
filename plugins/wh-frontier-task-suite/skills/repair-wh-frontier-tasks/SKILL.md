@@ -9,7 +9,7 @@ Convert the independent review into verified code and task changes. Treat review
 
 ## Establish inputs and protect user work
 
-Require the submission directory, `review.json`, its matching `evidence.json`, the selected reference task, and the Frontier-Bench checkout. Read [references/repair-playbook.md](references/repair-playbook.md).
+Require the submission directory, `review.json`, its matching `evidence.json`, and the selected reference name or task. Default the Frontier-Bench root to the bundled snapshot at `../../assets/frontier-bench` relative to this skill, and resolve the reference under its `tasks/` directory. Accept an external Frontier-Bench root only when explicitly supplied. Read [references/repair-playbook.md](references/repair-playbook.md).
 
 Inspect repository status before editing. Preserve unrelated and pre-existing user changes. Never reset, overwrite, or delete them. Use a dedicated branch/worktree or a copied submission when the source contains ambiguous overlapping edits.
 

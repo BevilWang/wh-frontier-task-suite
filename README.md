@@ -1,58 +1,62 @@
 # WH Frontier Task Suite
 
-WH Frontier Task Suite is a Codex plugin for authoring, independently reviewing, and repairing Frontier-Bench/Harbor benchmark submissions.
+一个可开箱即用的 Codex 多智能体插件，用于创作、独立二审、修复和发布 Frontier-Bench / Harbor 基准任务。
 
-It turns a reference task into a coordinated multi-agent workflow inside one Codex task:
+插件已经内置 7 个 Frontier-Bench 参考题，以及任务创作所需的 checks、rubrics、taxonomy 和 task template。GitHub 用户安装插件后无需再单独克隆 Frontier-Bench 仓库。
+
+## 工作流程
 
 ```text
-Author three original tasks -> independent review -> evidence-driven repair -> fresh re-review
+Coordinator
+  -> isolated author
+  -> isolated independent reviewer
+  -> isolated repairer (when required)
+  -> fresh two-phase re-reviewer
+  -> immutable-snapshot release agent
 ```
 
-The coordinator spawns isolated author, reviewer, repair, re-review, and release subagents. Stages exchange validated filesystem artifacts instead of conversation summaries, preserving reviewer independence without requiring the user to open separate tasks.
+整个流程在一个 Codex 任务内完成。协调器通过子智能体和磁盘产物交接工作，不要求用户手动创建多个任务。
 
-The plugin combines procedural skills with deterministic helper scripts for submission scaffolding, structural validation, evidence snapshots, review reports, and repair ledgers.
-
-## What is included
+## 包含的 Skills
 
 ### `$run-wh-frontier-pipeline`
 
-Runs the complete lifecycle from one user-facing task. It:
+推荐入口。负责调度完整多智能体流水线：
 
-- starts every stage agent with an empty inherited conversation context;
-- prevents concurrent writers from editing the same submission;
-- passes raw artifact paths rather than author conclusions;
-- validates review reports, source fingerprints, and repair ledgers between stages;
-- loops through repair and fresh re-review up to a configured limit;
-- releases only after a validated independent `PASS`.
+- 使用空继承上下文启动每个阶段智能体；
+- 串行执行所有写入阶段，避免多个智能体同时修改提交；
+- 使用 `review.json`、源码指纹和 `repair-ledger.json` 作为阶段门；
+- 修复后先进行 from-scratch review，再检查旧问题是否真正关闭；
+- 只有独立复审为 `PASS` 才能进入发布；
+- 发布包必须与通过复审的不可变快照指纹一致。
 
 ### `$create-wh-frontier-tasks`
 
-Creates, implements, validates, and packages exactly three original benchmark tasks from one supported reference. The skill covers:
+根据一个内置参考题创作、实现、验证并打包 3 个原创任务，包括：
 
-- concept design and originality gates;
-- task instructions, metadata, environment, oracle solution, and verifier tests;
-- static checks, oracle/nop runs, leakage checks, and shortcut resistance;
-- submission layout and reproducible archive generation.
+- 新颖性与难度设计；
+- `instruction.md`、`task.toml`、`environment/`、`solution/` 和 `tests/`；
+- static、oracle、nop、泄漏和抗投机检查；
+- 提交目录及 zip 归档。
 
 ### `$verify-wh-frontier-tasks`
 
-Runs a read-only second review with a fresh AI reviewer and deterministic evidence. It checks:
+使用独立 AI 和确定性证据进行只读二审，检查：
 
-- originality relative to the selected reference;
-- specification-to-test alignment;
-- clean-build solvability and nop resistance;
-- verifier quality, isolation, leakage, security, and packaging;
-- source immutability throughout the review.
+- 相对参考题的实质原创性；
+- 题面与测试的双向一致性；
+- 可解性、oracle/nop 结果及验证器质量；
+- 隔离、泄漏、权限安全、确定性和打包规范。
 
-The review produces `evidence.json`, `review.json`, and `review.md`, with an overall verdict of `PASS`, `FAIL`, or `PROVISIONAL`.
+输出 `evidence.json`、`review.json` 和 `review.md`，结论只能是 `PASS`、`FAIL` 或 `PROVISIONAL`。
 
 ### `$repair-wh-frontier-tasks`
 
-Consumes an independent review, verifies that it matches the current source fingerprint, reproduces each finding, repairs root causes, runs the full regression gate, and produces an auditable repair ledger. A repaired submission must return to a fresh reviewer before it can be accepted.
+读取独立二审报告，逐条复现 finding、修复根因、补充回归测试，并生成可验证的 repair ledger。完成的 ledger 必须包含每个任务的 static、oracle 和 nop 回归证据。
 
-## Supported reference tasks
+## 内置参考题
 
-| Domain | Reference task |
+| 方向 | 参考题 |
 | --- | --- |
 | Software / Databases | `wal-recovery-ordering` |
 | Software / Data Engineering | `ontology-kg-querying` |
@@ -62,70 +66,61 @@ Consumes an independent review, verifies that it matches the current source fing
 | ML / Inference | `vllm-deepseek-streaming` |
 | Science / Robotics | `biped-contact-dynamics` |
 
-Each reference profile preserves only transferable difficulty mechanisms. New tasks must use original objectives, systems or data, reasoning paths, artifacts, hidden variations, and verifier logic.
+参考文件位于：
 
-## Installation
+```text
+plugins/wh-frontier-task-suite/assets/frontier-bench/
+```
 
-Install the repository as a Git marketplace, then install the plugin:
+该目录是 [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench) 提交 `3d694e919871dbf21ea5ff618782c99a3cb3663f` 的精选快照。
+
+为控制插件体积，快照排除了 `ks-solver-cpp/tests/wheels/**` 中的大型预编译 wheels；题面、元数据、环境源码、solution、tests、checks 和 rubrics 均已保留。详细来源和排除清单见 [PROVENANCE.md](plugins/wh-frontier-task-suite/assets/frontier-bench/PROVENANCE.md)。
+
+上游内容采用 Apache License 2.0，许可证和第三方声明见：
+
+- [Frontier-Bench LICENSE](plugins/wh-frontier-task-suite/assets/frontier-bench/LICENSE)
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+
+## 安装
+
+需要带有 `plugin` 子命令并支持子智能体协作的 Codex。
 
 ```bash
 codex plugin marketplace add BevilWang/wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-Start a new Codex task after installation so all four skills are loaded into context. The coordinator requires a Codex surface with subagent collaboration tools.
+安装或更新后，新建一个 Codex 任务以载入插件。
 
-To update:
+更新插件：
 
 ```bash
 codex plugin marketplace upgrade wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-## One-task quick start
+## 开箱即用
 
-1. Clone or otherwise provide a local Frontier-Bench checkout.
-2. Choose one supported reference task.
-3. Open one Codex task and invoke `$run-wh-frontier-pipeline` with the reference path, workspace, owner, contact, and date.
-4. Let the coordinator spawn and supervise the isolated stage agents.
-5. Respond only if Codex requests authority that the agents do not already have.
-
-Example:
+安装完成后，在 Codex 中发送：
 
 ```text
-Use $run-wh-frontier-pipeline to create and release a complete submission.
+Use $run-wh-frontier-pipeline to run the complete Frontier-Bench lifecycle.
 
-Reference task: /path/to/frontier-bench/tasks/wal-recovery-ordering
-Frontier-Bench checkout: /path/to/frontier-bench
-Workspace root: /path/to/workspace
+Reference: wal-recovery-ordering
+Workspace root: /path/to/writable/workspace
 Owner: example-owner
 Contact: owner@example.com
 Submission date: 20260802
 Maximum repair rounds: 2
+
+Use the bundled Frontier-Bench snapshot. Do not ask me to open separate tasks.
 ```
 
-The three specialist skills remain available for manual or partial workflows, but normal use should start with the coordinator.
+只需提供参考题名称和可写工作目录；参考题路径、checks、rubrics 与模板由插件自动解析。
 
-Ready-to-copy prompts for all seven reference domains and every workflow stage are available in [docs/prompts.md](docs/prompts.md).
+7 个方向的完整提示词及手工阶段提示词见 [docs/prompts.md](docs/prompts.md)。
 
-## Repository layout
-
-```text
-.
-|-- .agents/plugins/marketplace.json
-|-- docs/prompts.md
-`-- plugins/wh-frontier-task-suite/
-    |-- .codex-plugin/plugin.json
-    `-- skills/
-        |-- create-wh-frontier-tasks/
-        |-- run-wh-frontier-pipeline/
-        |-- verify-wh-frontier-tasks/
-        `-- repair-wh-frontier-tasks/
-```
-
-## Output contract
-
-The authoring skill creates:
+## 产物结构
 
 ```text
 OWNER_submission/
@@ -135,11 +130,51 @@ OWNER_submission/
 `-- task-3-short-name/
 ```
 
-Each task contains `instruction.md`, `task.toml`, `environment/`, `solution/`, and `tests/`. The packaged archive is named `OWNER_Category_Subcategory_YYYYMMDD.zip`.
+每个任务包含：
 
-## Local validation
+```text
+instruction.md
+task.toml
+environment/
+solution/
+tests/
+```
 
-Run the bundled unit tests:
+最终归档名称：
+
+```text
+OWNER_Category_Subcategory_YYYYMMDD.zip
+```
+
+## 运行要求
+
+插件本身及参考题阅读不需要额外下载。完整运行生成任务的容器验证时，仍可能需要：
+
+- Python 3；
+- Docker；
+- Harbor；
+- 参考题或新任务声明的系统依赖。
+
+如果本机缺少 Harbor 或 Docker，Skill 会完成可执行的静态检查，并把未运行项目标为 `PROVISIONAL`，不会伪报为通过。
+
+## 仓库结构
+
+```text
+.
+|-- .agents/plugins/marketplace.json
+|-- docs/prompts.md
+|-- THIRD_PARTY_NOTICES.md
+`-- plugins/wh-frontier-task-suite/
+    |-- .codex-plugin/plugin.json
+    |-- assets/frontier-bench/
+    `-- skills/
+        |-- run-wh-frontier-pipeline/
+        |-- create-wh-frontier-tasks/
+        |-- verify-wh-frontier-tasks/
+        `-- repair-wh-frontier-tasks/
+```
+
+## 本地验证
 
 ```bash
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts -p "test_*.py"
@@ -147,13 +182,18 @@ python -m unittest discover -s plugins/wh-frontier-task-suite/skills/verify-wh-f
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/repair-wh-frontier-tasks/scripts -p "test_*.py"
 ```
 
-During plugin development, validate the plugin with `plugin-creator/scripts/validate_plugin.py` and validate each skill with `skill-creator/scripts/quick_validate.py` from a Codex installation.
+参考 bundle 也可单独验证：
 
-## Review integrity
+```bash
+python plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py \
+  plugins/wh-frontier-task-suite/assets/frontier-bench
+```
 
-- The independent reviewer receives raw artifacts, not the author's conclusions.
-- Commands that may write run against disposable copies.
-- Required runtime checks cannot be replaced by source inspection.
-- Hidden verifier data and oracle internals stay out of human-facing reports.
-- A missing required runtime check yields `PROVISIONAL`, unless observed defects already require `FAIL`.
-- A repaired submission always returns to a fresh independent reviewer.
+## 审查完整性
+
+- Reviewer 不接收 Author 的结论或预期 verdict。
+- 可能写入文件的审查命令必须在 disposable copy 上运行。
+- 源码检查不能代替必须执行的 runtime checks。
+- `PROVISIONAL` 不等于通过。
+- 修复后的提交必须由新的独立 Reviewer 复审。
+- Release 只能打包与最终 `PASS` 指纹一致的不可变快照。

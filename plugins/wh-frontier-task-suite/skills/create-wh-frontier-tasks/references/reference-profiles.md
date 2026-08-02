@@ -14,7 +14,7 @@ Use this map only to select transferable difficulty mechanisms. Read the live ta
 
 ## Source paths
 
-Resolve all paths relative to the Frontier-Bench checkout:
+Resolve all paths relative to the selected Frontier-Bench reference root (the bundled snapshot by default):
 
 ```text
 tasks/wal-recovery-ordering/

@@ -1,12 +1,13 @@
 {
   "name": "wh-frontier-task-suite",
-  "version": "0.4.0",
-  "description": "Orchestrate multi-agent creation, independent review, repair, and release of Frontier-Bench submissions.",
+  "version": "0.5.0",
+  "description": "Run a self-contained multi-agent workflow for Frontier-Bench task creation, review, repair, and release.",
   "author": {
     "name": "BevilWang"
   },
   "keywords": [
     "frontier-bench",
+    "self-contained",
     "benchmark-authoring",
     "multi-agent",
     "independent-review",
@@ -15,8 +16,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "WH Frontier Task Suite",
-    "shortDescription": "Run a multi-agent Frontier-Bench task pipeline.",
-    "longDescription": "A coordinated Codex workflow that spawns isolated author, reviewer, repair, re-review, and release agents to create three original Frontier-Bench tasks and carry them through evidence-backed quality gates without manual task switching.",
+    "shortDescription": "Run a self-contained multi-agent task pipeline.",
+    "longDescription": "A coordinated Codex workflow with seven bundled Frontier-Bench references. It spawns isolated author, reviewer, repair, re-review, and release agents to create three original tasks and carry them through evidence-backed quality gates without a separate Frontier-Bench checkout or manual task switching.",
     "developerName": "BevilWang",
     "category": "Developer Tools",
     "capabilities": [

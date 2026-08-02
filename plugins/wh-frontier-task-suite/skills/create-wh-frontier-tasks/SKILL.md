@@ -1,6 +1,6 @@
 ---
 name: create-wh-frontier-tasks
-description: Create, implement, validate, and package exactly three original Frontier-Bench/Harbor terminal tasks calibrated from one supported reference. Use when asked to author benchmark tasks from wal-recovery-ordering, ontology-kg-querying, rs-archive-clone, lean-midpoint-proof, ks-solver-cpp, vllm-deepseek-streaming, or biped-contact-dynamics; when producing instruction.md, task.toml, environment, solution, tests, oracle/nop validation, and a dated zip submission; or when checking such a submission against the bundled submission contract and Frontier-Bench quality bar.
+description: Create, implement, validate, and package exactly three original Frontier-Bench/Harbor terminal tasks calibrated from one of seven bundled reference tasks. Use when asked to author benchmark tasks from wal-recovery-ordering, ontology-kg-querying, rs-archive-clone, lean-midpoint-proof, ks-solver-cpp, vllm-deepseek-streaming, or biped-contact-dynamics; when producing instruction.md, task.toml, environment, solution, tests, oracle/nop validation, and a dated zip submission; or when checking such a submission against the bundled submission contract and Frontier-Bench quality bar without requiring a separate Frontier-Bench checkout.
 ---
 
 # Create WH Frontier Tasks
@@ -9,11 +9,19 @@ Produce a submission that another agent can solve and a separate verifier can gr
 
 ## Establish inputs
 
-Require one supported reference name, a local Frontier-Bench checkout, an owner, a contact, a real submission date, and an output directory. Default the modality to text unless the user provides a different value. Never invent personal details.
+Require one supported reference name, an owner, a contact, a real submission date, and an output directory. Default the modality to text unless the user provides a different value. Never invent personal details.
+
+Resolve the default Frontier-Bench root from the skill directory as `../../assets/frontier-bench`. Run:
+
+```text
+python scripts/validate_reference_bundle.py BUNDLED_FRONTIER_ROOT
+```
+
+Use `BUNDLED_FRONTIER_ROOT/tasks/REFERENCE` as the reference task. Accept an external Frontier-Bench root only when the user explicitly supplies one; verify it contains the selected task, current checks, rubrics, taxonomy, and task template before using it as an override.
 
 Read [references/reference-profiles.md](references/reference-profiles.md) for the selected reference. Then inspect its `instruction.md`, `task.toml`, `README.md`, `environment/`, `solution/`, and `tests/` in that order. Read [references/frontier-standards.md](references/frontier-standards.md) before designing or validating tasks.
 
-Treat the checked-out repository as the current source of truth when it conflicts with examples in the references. Do not browse for or copy task-specific solutions.
+Treat the selected bundled or explicitly supplied Frontier-Bench root as the source of truth when it conflicts with examples in the skill references. Do not browse for or copy other task-specific solutions.
 
 ## Design three original tasks
 
@@ -92,6 +100,6 @@ python scripts/submission_tool.py package PATH_TO/OWNER_submission \
   --category CATEGORY --subcategory SUBCATEGORY --date YYYYMMDD
 ```
 
-Expect `wh_Category_Subcategory_YYYYMMDD.zip`. Open the archive listing and confirm it contains one submission root, its README, and exactly three independent task directories.
+Expect `OWNER_Category_Subcategory_YYYYMMDD.zip`. Open the archive listing and confirm it contains one submission root, its README, and exactly three independent task directories.
 
 In the final response, report the skill path, selected reference, three task names, zip path, oracle/nop/static results, and any checks not run. Do not present scaffolding as a finished submission.

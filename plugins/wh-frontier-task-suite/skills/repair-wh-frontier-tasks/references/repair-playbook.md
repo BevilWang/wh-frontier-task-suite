@@ -1,6 +1,6 @@
 # Report-driven repair playbook
 
-Use the live Frontier-Bench checkout as the source of truth. Keep the original review immutable and record all decisions in `repair-ledger.json`.
+Use the resolved Frontier-Bench reference bundle as the source of truth. It defaults to the plugin's bundled snapshot and may be replaced only by an explicitly supplied compatible checkout. Keep the original review immutable and record all decisions in `repair-ledger.json`.
 
 ## Evidence hierarchy
 
