@@ -16,7 +16,7 @@ Obtain:
 - owner, contact, and real submission date;
 - an optional maximum repair-round count, defaulting to `2`.
 
-Resolve the default Frontier-Bench root relative to this skill as `../../assets/frontier-bench`, validate it with the creator skill's `validate_reference_bundle.py`, and derive the reference path as `BUNDLED_FRONTIER_ROOT/tasks/REFERENCE`. Use an external Frontier-Bench root only when the user explicitly supplies one and it passes the required structure checks.
+Resolve the default Frontier-Bench root relative to this skill as `../../fb`. Run the creator skill's `validate_reference_bundle.py BUNDLED_FRONTIER_ROOT --reference REFERENCE --json` and use the returned `task`, `checks`, `rubric`, `taxonomy`, and `template` paths. Do not append canonical directory names: the bundled snapshot uses a Windows-safe short layout, while the resolver also supports canonical external roots on Windows, macOS, and Linux. Use an external root only when the user explicitly supplies one and it passes validation.
 
 Derive one run root under `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` and use the final directory name as `RUN_ID`. Keep author output, reviews, repairs, release artifacts, and `pipeline-state.json` under that root. Record inputs, current state, agent names, artifact paths, verdicts, repair rounds, blockers, and final release metadata without storing hidden answers.
 

@@ -11,13 +11,13 @@ Produce a submission that another agent can solve and a separate verifier can gr
 
 Require one supported reference name, an owner, a contact, a real submission date, and an output directory. Default the modality to text unless the user provides a different value. Never invent personal details.
 
-Resolve the default Frontier-Bench root from the skill directory as `../../assets/frontier-bench`. Run:
+Resolve the default Frontier-Bench root from the skill directory as `../../fb`. The bundled snapshot uses short physical directory names so Git can install it on Windows without `core.longpaths`; the public reference names remain unchanged. Run:
 
 ```text
-python scripts/validate_reference_bundle.py BUNDLED_FRONTIER_ROOT
+python scripts/validate_reference_bundle.py BUNDLED_FRONTIER_ROOT --reference REFERENCE --json
 ```
 
-Use `BUNDLED_FRONTIER_ROOT/tasks/REFERENCE` as the reference task. Accept an external Frontier-Bench root only when the user explicitly supplies one; verify it contains the selected task, current checks, rubrics, taxonomy, and task template before using it as an override.
+Use the returned `task`, `checks`, `rubric`, `taxonomy`, and `template` paths instead of constructing them. The resolver understands both the bundled short layout and a canonical external Frontier-Bench checkout. Accept an external root only when the user explicitly supplies one and it validates successfully. Build paths with `pathlib` or the host's native path utilities; do not hard-code `/` or `\\` as a filesystem separator.
 
 Read [references/reference-profiles.md](references/reference-profiles.md) for the selected reference. Then inspect its `instruction.md`, `task.toml`, `README.md`, `environment/`, `solution/`, and `tests/` in that order. Read [references/frontier-standards.md](references/frontier-standards.md) before designing or validating tasks.
 

@@ -1,6 +1,6 @@
 {
   "name": "wh-frontier-task-suite",
-  "version": "0.5.0",
+  "version": "0.6.0+codex.20260802170920",
   "description": "Run a self-contained multi-agent workflow for Frontier-Bench task creation, review, repair, and release.",
   "author": {
     "name": "BevilWang"

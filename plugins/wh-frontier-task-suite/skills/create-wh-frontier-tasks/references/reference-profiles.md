@@ -14,16 +14,16 @@ Use this map only to select transferable difficulty mechanisms. Read the live ta
 
 ## Source paths
 
-Resolve all paths relative to the selected Frontier-Bench reference root (the bundled snapshot by default):
+Keep using these public reference names. Resolve their physical paths with `validate_reference_bundle.py ROOT --reference REFERENCE --json`; the bundled snapshot intentionally uses short directory names, while external upstream checkouts use `tasks/REFERENCE`:
 
 ```text
-tasks/wal-recovery-ordering/
-tasks/ontology-kg-querying/
-tasks/rs-archive-clone/
-tasks/lean-midpoint-proof/
-tasks/ks-solver-cpp/
-tasks/vllm-deepseek-streaming/
-tasks/biped-contact-dynamics/
+wal-recovery-ordering
+ontology-kg-querying
+rs-archive-clone
+lean-midpoint-proof
+ks-solver-cpp
+vllm-deepseek-streaming
+biped-contact-dynamics
 ```
 
 For each selected reference, inspect:

@@ -32,7 +32,7 @@ codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 
 安装完成后，新建一个 Codex 任务以加载插件。
 
-Marketplace 由 GitHub 仓库提供，Codex 会自动获取插件内容；用户不需要手动执行 `git clone`。
+Marketplace 由 GitHub 仓库提供，Codex 会自动获取插件内容；用户不需要手动执行 `git clone`。内置参考包采用短路径布局，Windows 用户无需设置 `git config --global core.longpaths true`；同一套路径解析也兼容 macOS 和 Linux。
 
 更新插件：
 
@@ -131,8 +131,8 @@ OWNER_Category_Subcategory_YYYYMMDD.zip
 
 为控制插件体积，参考包排除了 `ks-solver-cpp/tests/wheels/**` 中的大型预编译 wheels，其余所需题面、源码、solution、tests、checks 和 rubrics 均已保留。
 
-- [参考包来源和排除清单](plugins/wh-frontier-task-suite/assets/frontier-bench/PROVENANCE.md)
-- [Frontier-Bench Apache-2.0 LICENSE](plugins/wh-frontier-task-suite/assets/frontier-bench/LICENSE)
+- [参考包来源、短路径映射和排除清单](plugins/wh-frontier-task-suite/fb/PROVENANCE.md)
+- [Frontier-Bench Apache-2.0 LICENSE](plugins/wh-frontier-task-suite/fb/LICENSE)
 - [第三方声明](THIRD_PARTY_NOTICES.md)
 
 ## 本地验证
@@ -141,11 +141,15 @@ OWNER_Category_Subcategory_YYYYMMDD.zip
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts -p "test_*.py"
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/verify-wh-frontier-tasks/scripts -p "test_*.py"
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/repair-wh-frontier-tasks/scripts -p "test_*.py"
+python -m unittest discover -s scripts -p "test_*.py"
+python scripts/validate_windows_paths.py
 ```
 
 验证内置参考包：
 
 ```bash
 python plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py \
-  plugins/wh-frontier-task-suite/assets/frontier-bench
+  plugins/wh-frontier-task-suite/fb --reference wal-recovery-ordering --json
 ```
+
+`validate_windows_paths.py` 将所有受 Git 跟踪的相对路径限制在 180 个字符以内，并检查 Windows 保留名、非法字符和大小写冲突，为 Git marketplace 的安装前缀保留至少 79 个字符的 `MAX_PATH` 余量。验证逻辑仅使用 Python 标准库和跨平台路径模型，可在 Windows、macOS 与 Linux 上运行。
