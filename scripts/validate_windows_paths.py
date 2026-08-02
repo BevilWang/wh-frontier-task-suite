@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path, PureWindowsPath
 
 
-DEFAULT_MAX_RELATIVE = 135
+DEFAULT_MAX_RELATIVE = 115
 WINDOWS_RESERVED = {
     "CON", "PRN", "AUX", "NUL",
     *(f"COM{number}" for number in range(1, 10)),
