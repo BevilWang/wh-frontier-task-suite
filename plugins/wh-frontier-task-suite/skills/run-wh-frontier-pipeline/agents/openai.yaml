@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run WH Frontier Pipeline"
+  short_description: "Orchestrate author, review, repair, and re-review agents"
+  default_prompt: "Use $run-wh-frontier-pipeline to run the complete multi-agent Frontier-Bench task workflow."

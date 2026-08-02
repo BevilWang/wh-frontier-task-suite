@@ -1,6 +1,6 @@
 # Prompt Library
 
-This document contains ready-to-copy prompts for the seven supported reference domains and every stage of the author-review-repair workflow.
+This document contains a one-task multi-agent prompt, domain-specific authoring prompts, and manual fallback prompts for every workflow stage.
 
 ## Before you start
 
@@ -15,17 +15,39 @@ Replace these placeholders before sending a prompt:
 
 After installing or updating the plugin, start a new Codex task so the skills are loaded.
 
-Use separate Codex tasks for authoring and independent review. A reviewer must not inherit the author's conversation context.
+The coordinator starts reviewers with an empty inherited context and uses filesystem artifacts for handoff.
 
-## Workflow
+## Recommended multi-agent workflow
 
-1. Send one domain-specific authoring prompt in task A.
-2. Send the independent review prompt in a fresh task B.
-3. If the verdict is not `PASS`, send the repair prompt in a writable task.
-4. Send the fresh re-review prompt in a new task C.
-5. Send the release prompt only after task C returns `PASS`.
+1. Send the prompt below once in a Codex task with subagent support.
+2. The coordinator spawns isolated author, reviewer, repair, re-review, and release agents.
+3. Respond only if the run needs new authority, credentials, infrastructure, or a material design decision.
 
 `PROVISIONAL` is not a pass.
+
+## Complete multi-agent pipeline prompt
+
+```text
+Use $run-wh-frontier-pipeline to run the complete Frontier-Bench lifecycle without asking me to open separate tasks.
+
+Reference task: <FRONTIER_BENCH_ROOT>/tasks/<REFERENCE>
+Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
+Workspace root: <WORKSPACE_ROOT>
+Owner: <OWNER>
+Contact: <CONTACT>
+Submission date: <YYYYMMDD>
+Maximum repair rounds: 2
+
+Spawn every stage agent with no inherited conversation context. Use one isolated author agent, one isolated independent reviewer, an isolated repair agent when required, a fresh isolated re-reviewer after every repair, and an isolated release agent after a validated PASS. Do not ask me to create or switch tasks manually.
+
+Keep author and repair agents sequential; never allow concurrent writes to the submission. Pass reviewers only raw paths and role instructions, not author conclusions or desired verdicts. Use review.json, source fingerprints, and repair-ledger.json as stage gates. For repaired submissions, record and validate a from-scratch review before revealing prior findings for closure verification. Package only an immutable snapshot whose fingerprint equals the passing review. A PROVISIONAL result is not a pass. Stop only for missing authority, unavailable required infrastructure, invalid evidence after one retry, or exhaustion of the repair-round limit.
+
+At completion, report every agent and stage status, review verdicts, repair rounds, exact validation evidence, the final archive path, and checksum.
+```
+
+## Domain-specific authoring prompts
+
+The following prompts invoke the authoring skill directly. Use them when running a manual or partial workflow rather than the coordinator.
 
 ---
 
@@ -185,7 +207,7 @@ Run end-to-end validation under the output parent. Report the task names, comman
 
 ---
 
-## Independent review prompt
+## Manual independent review prompt
 
 Run this prompt in a fresh Codex task that has no authoring context. Replace `<REFERENCE>` with one of the supported reference names.
 
@@ -206,7 +228,7 @@ Run every safe and feasible build, static check, oracle test, nop test, mutation
 Produce evidence.json, review.json, and review.md. Every finding must include severity, observed evidence, impact, reproduction steps, and acceptance criteria. Use only PASS, FAIL, or PROVISIONAL for the overall verdict. Any material unresolved defect or missing required execution evidence prevents PASS. Do not repair the submission.
 ```
 
-## Repair prompt
+## Manual repair prompt
 
 Use this prompt only after an independent review returns `FAIL` or `PROVISIONAL`.
 
@@ -228,9 +250,9 @@ Add or update regression coverage for every fixed issue. Run the original public
 Report the change summary, evidence paths, unresolved items, and the corrected submission fingerprint. Require a fresh AI that participated in neither authoring nor repair to perform the next review.
 ```
 
-## Fresh re-review prompt
+## Manual fresh re-review prompt
 
-Run this prompt in another new Codex task after repair.
+Run phase 1 in another new Codex task after repair. Do not provide the previous review or repair ledger yet.
 
 ```text
 Use $verify-wh-frontier-tasks to independently re-review the corrected submission.
@@ -238,33 +260,43 @@ Use $verify-wh-frontier-tasks to independently re-review the corrected submissio
 Submission directory: <WORKSPACE_ROOT>/output/<REFERENCE>/<OWNER>_submission
 Reference task: <FRONTIER_BENCH_ROOT>/tasks/<REFERENCE>
 Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
-Previous review: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-1
-Repair evidence: <WORKSPACE_ROOT>/repairs/<REFERENCE>/round-1
-New review output: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2
+From-scratch review output: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2/from-scratch
 
-Act as a fresh independent reviewer. Review the corrected raw submission from first principles rather than relying on the previous verdict or repair ledger. Reproduce the trigger for every valid previous finding and verify that the root cause is gone. Check whether repairs introduced regressions, reduced difficulty, weakened verification, leaked hidden information, or compromised originality.
+Act as a fresh independent reviewer. Review the corrected raw submission from first principles. You have not been given the previous verdict, repair rationale, or expected outcome. Check correctness, originality, difficulty, verifier integrity, leakage, and regressions without modifying the submission.
 
 Re-run the complete build, static checks, public and hidden tests, oracle/nop checks, verifier self-tests, mutation/negative tests, resource checks, repeated runs, and targeted attacks. Record exact commands and evidence. Use only PASS, FAIL, or PROVISIONAL. PASS requires every material finding to be closed and every required check to have observed passing evidence. Do not modify the submission.
 ```
 
-## Final validation and release prompt
+After phase 1 has produced a validated report, send this follow-up to the same reviewer:
+
+```text
+Keep your recorded from-scratch assessment unchanged and now perform closure verification.
+
+Previous review: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-1
+Repair evidence: <WORKSPACE_ROOT>/repairs/<REFERENCE>/round-1
+Closure review output: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2/closure
+
+Reproduce each valid previous finding, verify its root cause is closed, and check that the repair introduced no regression or verifier weakening. Write the authoritative review.json and review.md under the closure output. Preserve submission immutability and use only PASS, FAIL, or PROVISIONAL.
+```
+
+## Manual final validation and release prompt
 
 Use this prompt only after the fresh re-review returns `PASS`.
 
 ```text
 Use $create-wh-frontier-tasks to perform final release validation and package the approved submission. Do not redesign the tasks.
 
-Submission directory: <WORKSPACE_ROOT>/output/<REFERENCE>/<OWNER>_submission
-Passing review: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2
+Reviewed immutable snapshot: <WORKSPACE_ROOT>/release-snapshots/<REFERENCE>/<OWNER>_submission
+Passing review: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-2/closure
 Frontier-Bench checkout: <FRONTIER_BENCH_ROOT>
 Release output: <WORKSPACE_ROOT>/deliverables/<REFERENCE>
 Owner: <OWNER>
 Contact: <CONTACT>
 Submission date: <YYYYMMDD>
 
-Confirm that the fresh review verdict is PASS and that every required check has evidence. Re-run the minimum complete release gate. Verify the file inventory, paths, dependency locks, encodings, hidden-material separation, license/provenance information, owner/contact metadata, and archive structure. Remove only confirmed scratch artifacts, caches, and local build products.
+Confirm that the fresh review verdict is PASS, every required check has evidence, and the reviewed snapshot fingerprint equals the review fingerprint. Re-run the minimum complete release gate in read-only mode. Verify the file inventory, paths, dependency locks, encodings, hidden-material separation, license/provenance information, owner/contact metadata, and archive structure. Do not edit, clean, rename, or update the reviewed snapshot. If any content change is needed, stop and send the submission back through repair and fresh review.
 
-Build the final archive and checksum. Extract it into a clean temporary directory and run a smoke test against the extracted copy. Report the archive path, hash, file inventory, reproduction commands, and observed evidence. If any release blocker appears, stop and report it instead of labeling the release complete.
+Build the final archive and checksum. Extract it into a clean temporary directory, fingerprint the extracted submission, require that fingerprint to equal the passing review fingerprint, and run a smoke test against the extracted copy. Report the archive path, hash, file inventory, fingerprint comparison, reproduction commands, and observed evidence. If any release blocker appears, stop and report it instead of labeling the release complete.
 ```
 
 ## Reference placeholder values

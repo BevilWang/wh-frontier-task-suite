@@ -2,15 +2,28 @@
 
 WH Frontier Task Suite is a Codex plugin for authoring, independently reviewing, and repairing Frontier-Bench/Harbor benchmark submissions.
 
-It turns a reference task into a disciplined four-stage workflow:
+It turns a reference task into a coordinated multi-agent workflow inside one Codex task:
 
 ```text
 Author three original tasks -> independent review -> evidence-driven repair -> fresh re-review
 ```
 
+The coordinator spawns isolated author, reviewer, repair, re-review, and release subagents. Stages exchange validated filesystem artifacts instead of conversation summaries, preserving reviewer independence without requiring the user to open separate tasks.
+
 The plugin combines procedural skills with deterministic helper scripts for submission scaffolding, structural validation, evidence snapshots, review reports, and repair ledgers.
 
 ## What is included
+
+### `$run-wh-frontier-pipeline`
+
+Runs the complete lifecycle from one user-facing task. It:
+
+- starts every stage agent with an empty inherited conversation context;
+- prevents concurrent writers from editing the same submission;
+- passes raw artifact paths rather than author conclusions;
+- validates review reports, source fingerprints, and repair ledgers between stages;
+- loops through repair and fresh re-review up to a configured limit;
+- releases only after a validated independent `PASS`.
 
 ### `$create-wh-frontier-tasks`
 
@@ -60,7 +73,7 @@ codex plugin marketplace add BevilWang/wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-Start a new Codex task after installation so the three skills are loaded into context.
+Start a new Codex task after installation so all four skills are loaded into context. The coordinator requires a Codex surface with subagent collaboration tools.
 
 To update:
 
@@ -69,15 +82,29 @@ codex plugin marketplace upgrade wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-## Quick start
+## One-task quick start
 
 1. Clone or otherwise provide a local Frontier-Bench checkout.
 2. Choose one supported reference task.
-3. Open a new Codex task and invoke `$create-wh-frontier-tasks` with the reference path and an output directory.
-4. Open a separate Codex task with no authoring context and invoke `$verify-wh-frontier-tasks`.
-5. If the verdict is not `PASS`, invoke `$repair-wh-frontier-tasks` in a writable task.
-6. Run `$verify-wh-frontier-tasks` again in another fresh task.
-7. Package only after the fresh review returns `PASS`. `PROVISIONAL` is not a pass.
+3. Open one Codex task and invoke `$run-wh-frontier-pipeline` with the reference path, workspace, owner, contact, and date.
+4. Let the coordinator spawn and supervise the isolated stage agents.
+5. Respond only if Codex requests authority that the agents do not already have.
+
+Example:
+
+```text
+Use $run-wh-frontier-pipeline to create and release a complete submission.
+
+Reference task: /path/to/frontier-bench/tasks/wal-recovery-ordering
+Frontier-Bench checkout: /path/to/frontier-bench
+Workspace root: /path/to/workspace
+Owner: example-owner
+Contact: owner@example.com
+Submission date: 20260802
+Maximum repair rounds: 2
+```
+
+The three specialist skills remain available for manual or partial workflows, but normal use should start with the coordinator.
 
 Ready-to-copy prompts for all seven reference domains and every workflow stage are available in [docs/prompts.md](docs/prompts.md).
 
@@ -91,6 +118,7 @@ Ready-to-copy prompts for all seven reference domains and every workflow stage a
     |-- .codex-plugin/plugin.json
     `-- skills/
         |-- create-wh-frontier-tasks/
+        |-- run-wh-frontier-pipeline/
         |-- verify-wh-frontier-tasks/
         `-- repair-wh-frontier-tasks/
 ```

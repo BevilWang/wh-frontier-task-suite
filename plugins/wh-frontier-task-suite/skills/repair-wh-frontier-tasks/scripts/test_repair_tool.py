@@ -23,6 +23,7 @@ def load_review_tool():
 
 def base_ledger() -> dict:
     current = repair_tool.fingerprint(SUBMISSION)
+    tasks = ["task-1-a", "task-2-b", "task-3-c"]
     return {
         "schema_version": 1,
         "submission": str(SUBMISSION.resolve()),
@@ -32,6 +33,18 @@ def base_ledger() -> dict:
         "summary": "All reviewed items were resolved with evidence.",
         "items": [],
         "item_manifest_fingerprint": repair_tool.item_manifest_fingerprint([]),
+        "task_manifest": tasks,
+        "task_manifest_fingerprint": repair_tool.task_manifest_fingerprint(tasks),
+        "regression": [
+            {
+                "task": task,
+                "checks": [
+                    {"kind": kind, "status": "PASS", "command": f"run-{kind}", "evidence": f"{kind}.log"}
+                    for kind in ("static", "oracle", "nop")
+                ],
+            }
+            for task in tasks
+        ],
     }
 
 
@@ -98,6 +111,32 @@ class RepairToolTest(unittest.TestCase):
         ledger["item_manifest_fingerprint"] = repair_tool.item_manifest_fingerprint(ledger["items"])
         errors = repair_tool.validate_ledger(ledger, SUBMISSION.resolve())
         self.assertTrue(any("complete ledger" in error for error in errors))
+
+    def test_rejected_item_requires_passing_counter_evidence(self) -> None:
+        ledger = base_ledger()
+        ledger["items"] = [{
+            "id": "rejected-weak",
+            "source": "finding",
+            "task": "package",
+            "criterion": "structure",
+            "severity": "major",
+            "title": "Unsupported rejection",
+            "report_evidence": ["review.log"],
+            "requested_action": "Fix the issue.",
+            "decision": "rejected",
+            "rationale": "I disagree.",
+            "changed_files": [],
+            "validation": [],
+        }]
+        ledger["item_manifest_fingerprint"] = repair_tool.item_manifest_fingerprint(ledger["items"])
+        errors = repair_tool.validate_ledger(ledger, SUBMISSION.resolve())
+        self.assertTrue(any("passing counter-evidence" in error for error in errors))
+
+    def test_complete_requires_full_regression(self) -> None:
+        ledger = base_ledger()
+        ledger["regression"][0]["checks"][1]["status"] = "NOT_RUN"
+        errors = repair_tool.validate_ledger(ledger, SUBMISSION.resolve())
+        self.assertTrue(any("regression PASS" in error for error in errors))
 
 
 if __name__ == "__main__":

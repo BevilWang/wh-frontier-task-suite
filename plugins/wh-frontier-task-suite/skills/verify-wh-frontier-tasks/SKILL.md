@@ -29,7 +29,9 @@ Treat `evidence.json` as an index, not as proof that the tasks are correct.
 
 ## Launch an independent reviewer
 
-Start one fresh subagent or fresh task with no inherited conversation context. Give it only the prompt in [references/reviewer-prompt.md](references/reviewer-prompt.md), replacing the path placeholders. Pass raw artifacts rather than a summary.
+When an orchestrator explicitly identifies the current agent as a fresh, isolated, coordinator-invoked reviewer and provides the raw paths, perform the review directly in the current agent. Do not spawn another reviewer from that mode.
+
+Otherwise, start one fresh subagent or fresh task with no inherited conversation context. Give it only the prompt in [references/reviewer-prompt.md](references/reviewer-prompt.md), replacing the path placeholders. Pass raw artifacts rather than a summary.
 
 If no fresh-agent mechanism is available, stop and return the filled reviewer prompt for the user to run in a new task. Do not silently replace the independent review with self-review.
 

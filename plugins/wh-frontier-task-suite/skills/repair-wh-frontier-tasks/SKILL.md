@@ -79,10 +79,14 @@ python scripts/repair_tool.py validate-ledger REPAIR_DIR/repair-ledger.json SUBM
 
 A `fixed` item must name changed files and passing validation evidence. A `rejected` or `not_applicable` item must contain reproducible counter-evidence. A blocker/major item cannot disappear from the ledger.
 
+Complete the top-level `regression` matrix with static, oracle, and nop commands and evidence for every task. `overall_status = complete` requires every regression entry to be `PASS`.
+
 Write `repair.md` with finding-to-change mappings, commands and outcomes, residual limitations, and the new submission fingerprint. Avoid copying hidden expected values or large oracle excerpts.
 
 ## Require fresh independent re-review
 
-Run `$verify-wh-frontier-tasks` again with a fresh second AI and a new review directory. Do not pass it the old verdict, repair rationale, or expected outcome; give it the corrected raw submission and selected reference.
+When an orchestrator explicitly identifies the current agent as an isolated coordinator-invoked repairer, stop after producing and validating `repair-ledger.json`, `repair.md`, and the corrected fingerprint. Return control to the orchestrator; do not spawn a reviewer or begin another repair cycle.
+
+Otherwise, run `$verify-wh-frontier-tasks` again with a fresh second AI and a new review directory. Do not pass it the old verdict, repair rationale, or expected outcome; give it the corrected raw submission and selected reference.
 
 Mark the repair cycle ready only when the fresh report is `PASS`. If it is `FAIL`, start a new ledger from that new report. If it is `PROVISIONAL`, report exactly which runtime evidence is still missing rather than claiming completion.

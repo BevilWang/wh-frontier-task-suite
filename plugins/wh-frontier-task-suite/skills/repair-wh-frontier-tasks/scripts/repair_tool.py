@@ -81,6 +81,11 @@ def item_manifest_fingerprint(items: list[dict]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def task_manifest_fingerprint(tasks: list[str]) -> str:
+    encoded = json.dumps(tasks, ensure_ascii=False, sort_keys=False, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def changed_from_baseline(relative: str, submission: Path, baseline: dict[str, str]) -> tuple[bool, str]:
     path = (submission / relative).resolve()
     try:
@@ -206,6 +211,7 @@ def cmd_intake(args: argparse.Namespace) -> int:
     if current != expected:
         raise SystemExit(f"stale review: current fingerprint {current} differs from reviewed {expected}")
     items = build_items(review)
+    tasks = [item.get("task") for item in review.get("task_results", []) if isinstance(item, dict)]
     ledger = {
         "schema_version": 1,
         "submission": str(submission),
@@ -216,6 +222,18 @@ def cmd_intake(args: argparse.Namespace) -> int:
         "overall_status": "in_progress",
         "items": items,
         "item_manifest_fingerprint": item_manifest_fingerprint(items),
+        "task_manifest": tasks,
+        "task_manifest_fingerprint": task_manifest_fingerprint(tasks),
+        "regression": [
+            {
+                "task": task,
+                "checks": [
+                    {"kind": kind, "status": "NOT_RUN", "command": "TODO", "evidence": "TODO"}
+                    for kind in ("static", "oracle", "nop")
+                ],
+            }
+            for task in tasks
+        ],
         "post_repair_fingerprint": "TODO",
         "summary": "TODO",
     }
@@ -237,6 +255,39 @@ def validate_ledger(ledger: dict, submission: Path) -> list[str]:
         errors.append("overall_status must be in_progress, complete, or blocked")
     if not ledger.get("summary") or ledger.get("summary") == "TODO":
         errors.append("summary must be completed")
+
+    task_manifest = ledger.get("task_manifest", [])
+    if not isinstance(task_manifest, list) or len(task_manifest) != 3 or len(set(task_manifest)) != 3 or any(not isinstance(task, str) or not task for task in task_manifest):
+        errors.append("task_manifest must contain exactly three unique task names")
+        task_manifest = []
+    if ledger.get("task_manifest_fingerprint") != task_manifest_fingerprint(task_manifest):
+        errors.append("task_manifest changed")
+
+    regression = ledger.get("regression", [])
+    regression_tasks = [entry.get("task") for entry in regression if isinstance(entry, dict)] if isinstance(regression, list) else []
+    if sorted(regression_tasks) != sorted(task_manifest) or len(regression_tasks) != len(task_manifest):
+        errors.append("regression must cover every task exactly once")
+    regression_statuses: list[str] = []
+    for entry in regression if isinstance(regression, list) else []:
+        if not isinstance(entry, dict):
+            errors.append("regression entries must be objects")
+            continue
+        checks = entry.get("checks", [])
+        kinds = {check.get("kind") for check in checks if isinstance(check, dict)}
+        if kinds != {"static", "oracle", "nop"} or len(checks) != 3:
+            errors.append(f"regression for {entry.get('task')} must cover static, oracle, and nop exactly once")
+        for check in checks:
+            if not isinstance(check, dict):
+                errors.append(f"regression checks for {entry.get('task')} must be objects")
+                continue
+            status = check.get("status")
+            if status not in VALIDATION_STATUSES:
+                errors.append(f"regression {check.get('kind')} for {entry.get('task')} has invalid status")
+            regression_statuses.append(status)
+            if not isinstance(check.get("command"), str) or not check.get("command", "").strip() or check.get("command") == "TODO":
+                errors.append(f"regression {check.get('kind')} for {entry.get('task')} requires command")
+            if not isinstance(check.get("evidence"), str) or not check.get("evidence", "").strip() or check.get("evidence") == "TODO":
+                errors.append(f"regression {check.get('kind')} for {entry.get('task')} requires evidence")
 
     items = ledger.get("items", [])
     if ledger.get("item_manifest_fingerprint") != item_manifest_fingerprint(items):
@@ -282,11 +333,13 @@ def validate_ledger(ledger: dict, submission: Path) -> list[str]:
                     errors.append(f"{item_id}: {relative}: {reason}")
             if not validations or any(check.get("status") != "PASS" for check in validations):
                 errors.append(f"{item_id}: fixed item requires passing validation evidence")
-        if decision in {"rejected", "not_applicable"} and not validations and not item.get("report_evidence"):
-            errors.append(f"{item_id}: {decision} requires counter-evidence")
+        if decision in {"rejected", "not_applicable"} and (not validations or any(check.get("status") != "PASS" for check in validations)):
+            errors.append(f"{item_id}: {decision} requires passing counter-evidence")
 
     if ledger.get("overall_status") == "complete" and (has_pending or has_blocked):
         errors.append("complete ledger cannot contain pending or blocked items")
+    if ledger.get("overall_status") == "complete" and any(status != "PASS" for status in regression_statuses):
+        errors.append("complete ledger requires static, oracle, and nop regression PASS for every task")
     if ledger.get("overall_status") == "blocked" and not has_blocked:
         errors.append("blocked ledger must contain a blocked item")
     if ledger.get("overall_status") == "in_progress" and not has_pending and not has_blocked:

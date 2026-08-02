@@ -53,6 +53,24 @@ class ReviewToolTest(unittest.TestCase):
         errors = review_tool.validate_report(packet(), candidate)
         self.assertTrue(any("PASS requires" in error for error in errors))
 
+    def test_overall_pass_cannot_hide_provisional_tasks_or_limitations(self) -> None:
+        candidate = report()
+        for task_result in candidate["task_results"]:
+            task_result["verdict"] = "PROVISIONAL"
+        candidate["limitations"] = ["Runtime evidence is incomplete."]
+        errors = review_tool.validate_report(packet(), candidate)
+        self.assertTrue(any("every task" in error for error in errors))
+
+    def test_pass_requires_criterion_and_execution_evidence(self) -> None:
+        candidate = report()
+        candidate["criteria"][0]["evidence"] = []
+        candidate["task_results"][0]["execution"][0]["command"] = ""
+        candidate["task_results"][0]["execution"][0]["evidence"] = ""
+        errors = review_tool.validate_report(packet(), candidate)
+        self.assertTrue(any("criterion" in error and "evidence" in error for error in errors))
+        self.assertTrue(any("requires command" in error for error in errors))
+        self.assertTrue(any("requires evidence" in error for error in errors))
+
     def test_provisional_allows_not_run_but_not_failure(self) -> None:
         candidate = report("NOT_RUN", "PROVISIONAL")
         self.assertEqual(review_tool.validate_report(packet(), candidate), [])
@@ -60,6 +78,12 @@ class ReviewToolTest(unittest.TestCase):
         failed["criteria"][0]["status"] = "FAIL"
         errors = review_tool.validate_report(packet(), failed)
         self.assertTrue(any("PROVISIONAL cannot hide" in error for error in errors))
+
+    def test_provisional_cannot_hide_failed_task_verdict(self) -> None:
+        candidate = report("NOT_RUN", "PROVISIONAL")
+        candidate["task_results"][0]["verdict"] = "FAIL"
+        errors = review_tool.validate_report(packet(), candidate)
+        self.assertTrue(any("failed task" in error for error in errors))
 
     def test_fingerprint_mismatch_is_rejected(self) -> None:
         candidate = report()

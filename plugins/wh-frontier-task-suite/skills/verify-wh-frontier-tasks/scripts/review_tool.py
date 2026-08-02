@@ -239,6 +239,8 @@ def validate_report(packet: dict, report: dict) -> list[str]:
     reviewer = report.get("reviewer", {})
     if reviewer.get("independent") is not True or reviewer.get("creator_context_seen") is not False:
         errors.append("reviewer must attest independent=true and creator_context_seen=false")
+    if not reviewer.get("identity") or reviewer.get("identity") == "TODO":
+        errors.append("reviewer identity must be completed")
     if report.get("verdict") not in VERDICTS:
         errors.append("verdict must be PASS, FAIL, or PROVISIONAL")
     confidence = report.get("confidence")
@@ -258,22 +260,35 @@ def validate_report(packet: dict, report: dict) -> list[str]:
             errors.append(f"criterion {item.get('name')} needs a rationale")
         if isinstance(item, dict) and item.get("severity") not in SEVERITIES:
             errors.append(f"criterion {item.get('name')} has an invalid severity")
+        if isinstance(item, dict) and item.get("status") != "NOT_RUN":
+            evidence = item.get("evidence")
+            if not isinstance(evidence, list) or not evidence or any(not isinstance(entry, str) or not entry.strip() for entry in evidence):
+                errors.append(f"criterion {item.get('name')} requires non-empty evidence")
 
     task_results = report.get("task_results", [])
     tasks = [item.get("task") for item in task_results if isinstance(item, dict)]
     if sorted(tasks) != sorted(packet.get("tasks", [])) or len(tasks) != len(packet.get("tasks", [])):
         errors.append("task_results must cover every packet task exactly once")
     execution_statuses = []
+    task_verdicts = []
     for task_result in task_results:
         if task_result.get("verdict") not in VERDICTS:
             errors.append(f"invalid task verdict for {task_result.get('task')}")
+        task_verdicts.append(task_result.get("verdict"))
         executions = task_result.get("execution", [])
         kinds = {item.get("kind") for item in executions if isinstance(item, dict)}
-        if kinds != EXECUTION_KINDS:
+        if kinds != EXECUTION_KINDS or len(executions) != len(EXECUTION_KINDS):
             errors.append(f"execution must cover static, oracle, and nop for {task_result.get('task')}")
         for item in executions:
+            if not isinstance(item, dict):
+                errors.append(f"execution entries must be objects for {task_result.get('task')}")
+                continue
             if item.get("status") not in {"PASS", "FAIL", "NOT_RUN"}:
                 errors.append(f"invalid execution status for {task_result.get('task')}")
+            for field in ("command", "evidence"):
+                value = item.get(field)
+                if not isinstance(value, str) or not value.strip() or value == "TODO":
+                    errors.append(f"execution {item.get('kind')} for {task_result.get('task')} requires {field}")
             execution_statuses.append(item.get("status"))
         task_execution_statuses = [item.get("status") for item in executions if isinstance(item, dict)]
         if task_result.get("verdict") == "PASS" and any(status != "PASS" for status in task_execution_statuses):
@@ -314,13 +329,27 @@ def validate_report(packet: dict, report: dict) -> list[str]:
         if finding.get("severity") in {"blocker", "major"} and finding.get("status") == "open":
             material_findings = True
 
+    limitations = report.get("limitations", [])
+    if not isinstance(limitations, list):
+        errors.append("limitations must be a list")
+        limitations = []
+    elif any(not isinstance(item, str) or not item.strip() or item == "TODO" for item in limitations):
+        errors.append("limitations must contain non-empty completed strings")
+
     criterion_statuses = [item.get("status") for item in criteria if isinstance(item, dict)]
     has_failure = "FAIL" in criterion_statuses or "FAIL" in execution_statuses
     has_not_run = "NOT_RUN" in criterion_statuses or "NOT_RUN" in execution_statuses
-    if report.get("verdict") == "PASS" and (has_failure or has_not_run or material_findings or any(status != "PASS" for status in criterion_statuses)):
-        errors.append("PASS requires every criterion and execution check to PASS")
-    if report.get("verdict") == "PROVISIONAL" and (has_failure or material_findings):
-        errors.append("PROVISIONAL cannot hide a failed criterion or execution check")
+    if report.get("verdict") == "PASS" and (
+        has_failure
+        or has_not_run
+        or material_findings
+        or any(status != "PASS" for status in criterion_statuses)
+        or any(verdict != "PASS" for verdict in task_verdicts)
+        or limitations
+    ):
+        errors.append("PASS requires every task, criterion, and execution check to PASS with no limitations")
+    if report.get("verdict") == "PROVISIONAL" and (has_failure or material_findings or "FAIL" in task_verdicts):
+        errors.append("PROVISIONAL cannot hide a failed task, criterion, or execution check")
     if report.get("verdict") == "FAIL" and not has_failure and not material_findings:
         errors.append("FAIL requires failed evidence or an open blocker/major finding")
 
