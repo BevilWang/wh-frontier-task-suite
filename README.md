@@ -2,7 +2,7 @@
 
 一个可开箱即用的 Codex 多智能体插件，用于创作、独立二审、修复和发布 Frontier-Bench / Harbor 基准任务。
 
-插件已经内置 7 个 Frontier-Bench 参考题，以及任务创作所需的 checks、rubrics、taxonomy 和 task template。GitHub 用户安装插件后无需再单独克隆 Frontier-Bench 仓库。
+插件已经内置 7 个 Frontier-Bench 参考题，以及任务创作所需的 checks、rubrics、taxonomy 和 task template。用户安装插件后无需再单独克隆 Frontier-Bench 仓库。
 
 ## 工作流程
 
@@ -72,9 +72,7 @@ Coordinator
 plugins/wh-frontier-task-suite/assets/frontier-bench/
 ```
 
-该目录是 [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench) 提交 `3d694e919871dbf21ea5ff618782c99a3cb3663f` 的精选快照。
-
-为控制插件体积，快照排除了 `ks-solver-cpp/tests/wheels/**` 中的大型预编译 wheels；题面、元数据、环境源码、solution、tests、checks 和 rubrics 均已保留。详细来源和排除清单见 [PROVENANCE.md](plugins/wh-frontier-task-suite/assets/frontier-bench/PROVENANCE.md)。
+为控制插件体积，排除了 `ks-solver-cpp/tests/wheels/**` 中的大型预编译 wheels；题面、元数据、环境源码、solution、tests、checks 和 rubrics 均已保留。详细来源和排除清单见 [PROVENANCE.md](plugins/wh-frontier-task-suite/assets/frontier-bench/PROVENANCE.md)。
 
 上游内容采用 Apache License 2.0，许可证和第三方声明见：
 
@@ -113,7 +111,6 @@ Contact: owner@example.com
 Submission date: 20260802
 Maximum repair rounds: 2
 
-Use the bundled Frontier-Bench snapshot. Do not ask me to open separate tasks.
 ```
 
 只需提供参考题名称和可写工作目录；参考题路径、checks、rubrics 与模板由插件自动解析。
