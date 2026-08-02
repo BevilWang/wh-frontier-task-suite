@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create WH Frontier Tasks"
+  short_description: "Create three original Frontier-Bench tasks"
+  default_prompt: "Use $create-wh-frontier-tasks to build and package three original tasks from one supported Frontier-Bench reference."
