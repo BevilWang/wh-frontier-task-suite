@@ -11,6 +11,8 @@ Produce a submission that another agent can solve and a separate verifier can gr
 
 Require one supported reference name, an owner, a contact, a real submission date, and an output directory. Default the modality to text unless the user provides a different value. Never invent personal details.
 
+In the Codex app, require the output directory to be inside the current writable workspace unless the user has explicitly granted another directory. Do not disable the host sandbox or redirect outputs into the plugin installation/cache directory.
+
 Resolve the default Frontier-Bench root from the skill directory as `../../fb`. The bundled snapshot uses short physical directory names so Git can install it on Windows without `core.longpaths`; the public reference names remain unchanged. Run:
 
 ```text

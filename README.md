@@ -1,49 +1,23 @@
 # WH Frontier Task Suite
 
-一个面向 Codex 的 Frontier-Bench 多智能体插件：从一个参考题出发，自动完成 **3 道原创任务的创作、独立二审、问题修复、重新复审和最终打包**。
+面向 Codex 应用的 Frontier-Bench 多智能体插件。它从一个内置参考题出发，在同一个 Codex 任务中完成 3 道原创任务的创作、独立二审、问题修复、重新复审和最终打包。
 
-插件内置 7 个 Frontier-Bench 参考题，以及 checks、rubrics、taxonomy 和 task template。用户无需手动克隆 Frontier-Bench，也无需为不同阶段单独创建 Codex 任务。
+插件内置 7 个 Frontier-Bench 参考资源及所需 checks、rubrics、taxonomy 和 task template。用户无需另行克隆 Frontier-Bench，也无需配置 Git 的 `core.longpaths`。
 
-## 核心功能
+## 在 Codex 应用中安装
 
-- **自动创作**：生成 3 道原创任务及完整的 `instruction.md`、`task.toml`、环境、solution 和 tests。
-- **独立二审**：由隔离的 Reviewer 检查原创性、可解性、题面与测试一致性、泄漏及 verifier 质量。
-- **自动修复**：复现二审问题、修复根因并补充回归测试。
-- **重新复审**：使用新的 Reviewer 从头审查，避免 Author 或 Repairer 的上下文影响结论。
-- **安全发布**：只有最终复审为 `PASS` 时，才会从已审查的不可变快照生成 zip 和校验和。
+本插件以 Codex repo marketplace 发布，插件条目直接指向 GitHub 的 `git-subdir` 源。安装和更新都在 Codex 应用的 **Plugins** 页面完成，不要求用户运行 Codex CLI。
 
-```text
-Coordinator
-  -> Author
-  -> Independent Reviewer
-  -> Repairer（需要时）
-  -> Fresh Re-reviewer
-  -> Release Agent
-```
+1. 在 Codex 应用中打开包含本仓库的项目，然后重启一次 Codex 应用，让它发现 `.agents/plugins/marketplace.json`。
+2. 打开 **Plugins**，选择 **WH Frontier Task Suite** marketplace。
+3. 打开插件详情，点击加号安装。
+4. 新建一个 Codex 任务；已安装的 Skills 会在新任务中加载。
 
-## 安装
+如果发布者通过 Codex 应用分享了插件，接收者也可以直接打开分享链接，在 **Shared with me** 中点击加号安装，无需本地仓库。完整的应用安装、更新和分享说明见 [docs/app-install.md](docs/app-install.md)。
 
-需要带有 `plugin` 子命令并支持子智能体的 Codex。
+## 运行完整流水线
 
-```bash
-codex plugin marketplace add BevilWang/wh-frontier-task-suite --ref main
-codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
-```
-
-安装完成后，新建一个 Codex 任务以加载插件。
-
-Marketplace 由 GitHub 仓库提供，Codex 会自动获取插件内容；用户不需要手动执行 `git clone`。内置参考包采用短路径布局，Windows 用户无需设置 `git config --global core.longpaths true`；同一套路径解析也兼容 macOS 和 Linux。
-
-更新插件：
-
-```bash
-codex plugin marketplace upgrade wh-frontier-task-suite
-codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
-```
-
-## 一条提示词运行完整流程
-
-在新的 Codex 任务中发送：
+在新任务中发送：
 
 ```text
 Use $run-wh-frontier-pipeline.
@@ -59,11 +33,22 @@ Maximum repair rounds: 2
 其中：
 
 - `Reference`：从下方 7 个内置参考题中选择一个；
-- `Workspace root`：保存任务、审查记录和发布包的可写目录；
+- `Workspace root`：保存任务、审核记录和发布包的可写目录；
 - `Owner`、`Contact`、`Submission date`：写入提交元数据；
 - `Maximum repair rounds`：可省略，默认值为 `2`。
 
-随后插件会自动启动各阶段子智能体并通过磁盘产物交接，不需要用户手动切换任务。流程结束后会报告每个阶段的状态、验证证据、最终归档路径和校验和。
+插件会在磁盘产物之间进行隔离交接，并依次运行：
+
+```text
+Coordinator
+  -> Author
+  -> Independent Reviewer
+  -> Repairer（需要时）
+  -> Fresh Re-reviewer
+  -> Release Agent
+```
+
+只有最终独立复审为 `PASS`，且发布快照与已审核内容指纹一致时，才会生成 zip 和校验和。
 
 ## 内置参考题
 
@@ -77,79 +62,46 @@ Maximum repair rounds: 2
 | ML / Inference | `vllm-deepseek-streaming` |
 | Science / Robotics | `biped-contact-dynamics` |
 
-7 个方向的完整提示词和手工阶段提示词见 [docs/prompts.md](docs/prompts.md)。
-
-## 质量门与结果
-
-Reviewer 只能给出以下结论：
-
-- `PASS`：所有必要检查均有通过证据，可以发布；
-- `FAIL`：存在可复现的问题，进入自动修复；
-- `PROVISIONAL`：缺少必要的运行证据，不能视为通过。
-
-若修复轮数耗尽、基础设施不可用或仍存在实质问题，插件会停止并报告 blocker，而不会绕过审查生成发布包。
-
-最终提交包含 3 个任务：
-
-```text
-OWNER_submission/
-|-- README.md
-|-- task-1-short-name/
-|-- task-2-short-name/
-`-- task-3-short-name/
-```
-
-发布归档命名为：
-
-```text
-OWNER_Category_Subcategory_YYYYMMDD.zip
-```
+更完整的提示词见 [docs/prompts.md](docs/prompts.md)。
 
 ## 可单独调用的 Skills
 
 | Skill | 用途 |
 | --- | --- |
-| `$run-wh-frontier-pipeline` | 推荐入口，自动协调完整多智能体流水线 |
-| `$create-wh-frontier-tasks` | 只执行任务创作、验证和打包 |
-| `$verify-wh-frontier-tasks` | 只执行独立、只读二审 |
-| `$repair-wh-frontier-tasks` | 根据二审报告检查并修复问题 |
+| `$run-wh-frontier-pipeline` | 推荐入口；协调完整多智能体流水线 |
+| `$create-wh-frontier-tasks` | 创作、验证并打包 3 道任务 |
+| `$verify-wh-frontier-tasks` | 独立、只读地二审任务提交 |
+| `$repair-wh-frontier-tasks` | 复现并修复二审报告中的问题 |
 
-## 运行要求
+## 运行环境与权限
 
-安装完成后，读取内置参考题无需再下载 Frontier-Bench。执行完整容器验证时可能需要：
+读取内置参考资源只需要已安装插件。完整执行某些参考方向时还可能需要 Python 3、Docker、Harbor 或题目声明的系统依赖。
 
-- Python 3；
-- Docker；
-- Harbor；
-- 任务声明的其他系统依赖。
+Codex 应用仍会对插件发起的命令应用当前项目的 sandbox 与审批策略。请把 `Workspace root` 设为当前项目内的可写目录；Docker 或 Harbor 需要访问宿主服务时，Codex 可能请求一次有范围的命令批准。插件不会要求关闭 sandbox。
 
-缺少必要运行环境时，插件会执行仍可完成的检查，并将缺失证据标记为 `PROVISIONAL`。
+如果必要基础设施不可用，流程会完成仍可执行的静态检查，并把缺失的运行证据标记为 `PROVISIONAL`，不会伪装成通过。
 
-## 参考资料与许可
+## Windows 与 macOS 兼容性
 
-内置参考包来自 [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench)，具体版本与收录范围记录在来源清单中。
+内置参考包使用短物理路径，公开的参考名保持不变。解析器基于 `pathlib` 和宿主系统原生路径语义，同时支持 Windows、macOS 和 Linux。
 
-为控制插件体积，参考包排除了 `ks-solver-cpp/tests/wheels/**` 中的大型预编译 wheels，其余所需题面、源码、solution、tests、checks 和 rubrics 均已保留。
+仓库 CI 在三种系统上执行单元测试、参考包解析、插件发布校验和 Windows 路径预算检查。所有受 Git 跟踪的相对路径限制在 180 个字符以内，为 Codex 插件缓存和默认 Windows `MAX_PATH` 留出余量。
 
-- [参考包来源、短路径映射和排除清单](plugins/wh-frontier-task-suite/fb/PROVENANCE.md)
-- [Frontier-Bench Apache-2.0 LICENSE](plugins/wh-frontier-task-suite/fb/LICENSE)
-- [第三方声明](THIRD_PARTY_NOTICES.md)
-
-## 本地验证
+## 本地发布验证
 
 ```bash
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts -p "test_*.py"
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/verify-wh-frontier-tasks/scripts -p "test_*.py"
 python -m unittest discover -s plugins/wh-frontier-task-suite/skills/repair-wh-frontier-tasks/scripts -p "test_*.py"
 python -m unittest discover -s scripts -p "test_*.py"
+python scripts/validate_plugin_release.py
 python scripts/validate_windows_paths.py
 ```
 
-验证内置参考包：
+## 来源与许可
 
-```bash
-python plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py \
-  plugins/wh-frontier-task-suite/fb --reference wal-recovery-ordering --json
-```
+内置参考包来自 [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench)。为控制插件体积，参考包排除了 `ks-solver-cpp/tests/wheels/**` 下的大型预编译 wheels，其余所需题面、源码、solution、tests、checks 和 rubrics 均已保留。
 
-`validate_windows_paths.py` 将所有受 Git 跟踪的相对路径限制在 180 个字符以内，并检查 Windows 保留名、非法字符和大小写冲突，为 Git marketplace 的安装前缀保留至少 79 个字符的 `MAX_PATH` 余量。验证逻辑仅使用 Python 标准库和跨平台路径模型，可在 Windows、macOS 与 Linux 上运行。
+- [参考包来源、短路径映射和排除清单](plugins/wh-frontier-task-suite/fb/PROVENANCE.md)
+- [Frontier-Bench Apache-2.0 LICENSE](plugins/wh-frontier-task-suite/fb/LICENSE)
+- [第三方声明](THIRD_PARTY_NOTICES.md)

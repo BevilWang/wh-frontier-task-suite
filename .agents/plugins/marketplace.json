@@ -7,8 +7,10 @@
     {
       "name": "wh-frontier-task-suite",
       "source": {
-        "source": "local",
-        "path": "./plugins/wh-frontier-task-suite"
+        "source": "git-subdir",
+        "url": "https://github.com/BevilWang/wh-frontier-task-suite.git",
+        "path": "./plugins/wh-frontier-task-suite",
+        "ref": "main"
       },
       "policy": {
         "installation": "AVAILABLE",

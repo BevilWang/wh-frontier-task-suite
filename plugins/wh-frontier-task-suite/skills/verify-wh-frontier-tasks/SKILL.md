@@ -18,6 +18,8 @@ Require:
 
 Resolve bundle paths by running the creator skill's `scripts/validate_reference_bundle.py ROOT --reference REFERENCE --json`. Use its returned semantic paths rather than appending directory names. This supports both the bundled short layout and canonical external checkouts on Windows, macOS, and Linux. Verify the root before reviewing.
 
+When invoked from the Codex app, keep report and disposable-test writes inside the current writable workspace. Respect the host sandbox; if a runtime check needs Docker or another host service and approval is unavailable, mark that evidence missing instead of retrying without sandbox protection.
+
 Do not pass creator reasoning, self-evaluation, suspected defects, intended answers, or previous review conclusions to the reviewer. Passing the raw submission, the raw reference, repository standards, and command logs is allowed.
 
 Hash the submission before review:

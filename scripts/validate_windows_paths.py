@@ -19,7 +19,7 @@ WINDOWS_ILLEGAL = set('<>:"\\|?*')
 
 def tracked_paths(root: Path) -> list[str]:
     result = subprocess.run(
-        ["git", "-C", str(root), "ls-files", "-z"],
+        ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
         check=True,
         capture_output=True,
     )

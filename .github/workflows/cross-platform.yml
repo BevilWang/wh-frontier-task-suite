@@ -30,5 +30,7 @@ jobs:
         run: >-
           python plugins/wh-frontier-task-suite/skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py
           plugins/wh-frontier-task-suite/fb
+      - name: Validate Codex app release
+        run: python scripts/validate_plugin_release.py
       - name: Validate Windows-safe repository paths
         run: python scripts/validate_windows_paths.py

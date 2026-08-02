@@ -1,10 +1,14 @@
 {
   "name": "wh-frontier-task-suite",
-  "version": "0.6.0+codex.20260802170920",
+  "version": "0.7.0+codex.20260802183340",
   "description": "Run a self-contained multi-agent workflow for Frontier-Bench task creation, review, repair, and release.",
   "author": {
-    "name": "BevilWang"
+    "name": "BevilWang",
+    "email": "wanghan.scut@gmail.com",
+    "url": "https://github.com/BevilWang"
   },
+  "homepage": "https://github.com/BevilWang/wh-frontier-task-suite#readme",
+  "repository": "https://github.com/BevilWang/wh-frontier-task-suite",
   "keywords": [
     "frontier-bench",
     "self-contained",
@@ -23,13 +27,14 @@
     "capabilities": [
       "Write",
       "Analysis",
-      "Testing"
+      "Testing",
+      "Multi-agent"
     ],
+    "websiteURL": "https://github.com/BevilWang/wh-frontier-task-suite",
     "defaultPrompt": [
       "Run the complete multi-agent Frontier-Bench pipeline from authoring through release.",
       "Create three original Frontier-Bench tasks from one supported reference.",
-      "Independently audit a three-task Frontier-Bench submission.",
-      "Repair all actionable findings from an independent review report."
+      "Independently audit or repair a three-task Frontier-Bench submission."
     ]
   }
 }

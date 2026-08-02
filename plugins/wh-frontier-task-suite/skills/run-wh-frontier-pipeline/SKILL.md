@@ -26,6 +26,8 @@ Read [references/orchestration-protocol.md](references/orchestration-protocol.md
 
 Require the Codex collaboration tools for spawning and waiting on subagents. Use `spawn_agent` with `fork_turns="none"` for every stage agent. Do not use user-owned tasks or ask the user to open another task.
 
+When running from the Codex app, keep the run root inside the user-selected writable workspace. Treat the host sandbox and approval policy as authoritative: never retry by disabling the sandbox, never request blanket bypass flags, and never instruct the user to switch to the CLI. If Docker, Harbor, or another host service needs access outside ordinary workspace permissions, request only the narrow command approval needed for that stage and record the result in `pipeline-state.json`.
+
 If subagent tools are unavailable, stop and state that this skill requires a Codex surface with multi-agent support. Do not simulate independent review in the coordinator context.
 
 ## Coordinate stages

@@ -15,6 +15,8 @@ Inspect repository status before editing. Preserve unrelated and pre-existing us
 
 Validate report freshness and create the repair ledger:
 
+When invoked from the Codex app, keep repair artifacts inside the current writable workspace. Respect the host sandbox and request only scoped approval for required Docker or Harbor commands; never instruct the user to disable sandboxing or move the workflow to the CLI.
+
 ```text
 python scripts/repair_tool.py intake SUBMISSION REVIEW_JSON EVIDENCE_JSON \
   --output REPAIR_DIR/repair-ledger.json
