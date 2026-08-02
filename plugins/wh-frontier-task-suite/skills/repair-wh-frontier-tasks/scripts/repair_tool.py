@@ -13,6 +13,12 @@ from pathlib import Path
 SEVERITY_ORDER = {"blocker": 0, "major": 1, "minor": 2, "info": 3}
 DECISIONS = {"pending", "fixed", "rejected", "not_applicable", "blocked"}
 VALIDATION_STATUSES = {"PASS", "FAIL", "NOT_RUN"}
+HARDENING_SWEEPS = {
+    "contract_matrix",
+    "input_domain_totality",
+    "verifier_adversarial",
+    "repair_halo",
+}
 
 
 def sha256(path: Path) -> str:
@@ -213,7 +219,7 @@ def cmd_intake(args: argparse.Namespace) -> int:
     items = build_items(review)
     tasks = [item.get("task") for item in review.get("task_results", []) if isinstance(item, dict)]
     ledger = {
-        "schema_version": 1,
+        "schema_version": 2,
         "submission": str(submission),
         "review": str(review_path),
         "evidence": str(evidence_path),
@@ -234,6 +240,16 @@ def cmd_intake(args: argparse.Namespace) -> int:
             }
             for task in tasks
         ],
+        "hardening": [
+            {
+                "task": task,
+                "checks": [
+                    {"name": name, "status": "NOT_RUN", "command": "TODO", "evidence": "TODO"}
+                    for name in sorted(HARDENING_SWEEPS)
+                ],
+            }
+            for task in tasks
+        ],
         "post_repair_fingerprint": "TODO",
         "summary": "TODO",
     }
@@ -244,8 +260,9 @@ def cmd_intake(args: argparse.Namespace) -> int:
 
 def validate_ledger(ledger: dict, submission: Path) -> list[str]:
     errors: list[str] = []
-    if ledger.get("schema_version") != 1:
-        errors.append("schema_version must be 1")
+    schema_version = ledger.get("schema_version")
+    if schema_version not in {1, 2}:
+        errors.append("schema_version must be 1 or 2")
     if Path(ledger.get("submission", "")).resolve() != submission:
         errors.append("ledger submission path does not match")
     current = fingerprint(submission)
@@ -288,6 +305,33 @@ def validate_ledger(ledger: dict, submission: Path) -> list[str]:
                 errors.append(f"regression {check.get('kind')} for {entry.get('task')} requires command")
             if not isinstance(check.get("evidence"), str) or not check.get("evidence", "").strip() or check.get("evidence") == "TODO":
                 errors.append(f"regression {check.get('kind')} for {entry.get('task')} requires evidence")
+
+    hardening_statuses: list[str] = []
+    if schema_version == 2:
+        hardening = ledger.get("hardening", [])
+        hardening_tasks = [entry.get("task") for entry in hardening if isinstance(entry, dict)] if isinstance(hardening, list) else []
+        if sorted(hardening_tasks) != sorted(task_manifest) or len(hardening_tasks) != len(task_manifest):
+            errors.append("hardening must cover every task exactly once")
+        for entry in hardening if isinstance(hardening, list) else []:
+            if not isinstance(entry, dict):
+                errors.append("hardening entries must be objects")
+                continue
+            checks = entry.get("checks", [])
+            names = {check.get("name") for check in checks if isinstance(check, dict)}
+            if names != HARDENING_SWEEPS or len(checks) != len(HARDENING_SWEEPS):
+                errors.append(f"hardening for {entry.get('task')} must cover every source sweep exactly once")
+            for check in checks:
+                if not isinstance(check, dict):
+                    errors.append(f"hardening checks for {entry.get('task')} must be objects")
+                    continue
+                status = check.get("status")
+                if status not in VALIDATION_STATUSES:
+                    errors.append(f"hardening {check.get('name')} for {entry.get('task')} has invalid status")
+                hardening_statuses.append(status)
+                if not isinstance(check.get("command"), str) or not check.get("command", "").strip() or check.get("command") == "TODO":
+                    errors.append(f"hardening {check.get('name')} for {entry.get('task')} requires command")
+                if not isinstance(check.get("evidence"), str) or not check.get("evidence", "").strip() or check.get("evidence") == "TODO":
+                    errors.append(f"hardening {check.get('name')} for {entry.get('task')} requires evidence")
 
     items = ledger.get("items", [])
     if ledger.get("item_manifest_fingerprint") != item_manifest_fingerprint(items):
@@ -340,6 +384,8 @@ def validate_ledger(ledger: dict, submission: Path) -> list[str]:
         errors.append("complete ledger cannot contain pending or blocked items")
     if ledger.get("overall_status") == "complete" and any(status != "PASS" for status in regression_statuses):
         errors.append("complete ledger requires static, oracle, and nop regression PASS for every task")
+    if schema_version == 2 and ledger.get("overall_status") == "complete" and any(status != "PASS" for status in hardening_statuses):
+        errors.append("complete ledger requires every hardening sweep to PASS for every task")
     if ledger.get("overall_status") == "blocked" and not has_blocked:
         errors.append("blocked ledger must contain a blocked item")
     if ledger.get("overall_status") == "in_progress" and not has_pending and not has_blocked:

@@ -21,7 +21,7 @@ The coordinator starts reviewers with an empty inherited context and uses filesy
 ## Recommended multi-agent workflow
 
 1. Send the prompt below once in a Codex task with subagent support.
-2. The coordinator spawns isolated author, reviewer, repair, re-review, and release agents.
+2. The coordinator spawns isolated author, pre-review hardener, reviewer, repair, re-review, and release agents.
 3. Respond only if the run needs new authority, credentials, infrastructure, or a material design decision.
 
 `PROVISIONAL` is not a pass.
@@ -37,11 +37,11 @@ Workspace root: <WORKSPACE_ROOT>
 Owner: <OWNER>
 Contact: <CONTACT>
 Submission date: <YYYYMMDD>
-Maximum repair rounds: 2
+Repair policy: continue until PASS
 
-Spawn every stage agent with no inherited conversation context. Use one isolated author agent, one isolated independent reviewer, an isolated repair agent when required, a fresh isolated re-reviewer after every repair, and an isolated release agent after a validated PASS. Do not ask me to create or switch tasks manually.
+Spawn every stage agent with no inherited conversation context. Use one isolated author, a separate pre-review hardener, one isolated independent reviewer, an isolated repairer when required, a fresh isolated re-reviewer after every repair, and an isolated release agent after a validated PASS. Do not ask me to create or switch tasks manually. Do not create a zip before release.
 
-Keep author and repair agents sequential; never allow concurrent writes to the submission. Pass reviewers only raw paths and role instructions, not author conclusions or desired verdicts. Use review.json, source fingerprints, and repair-ledger.json as stage gates. For repaired submissions, record and validate a from-scratch review before revealing prior findings for closure verification. Package only an immutable snapshot whose fingerprint equals the passing review. A PROVISIONAL result is not a pass. Stop only for missing authority, unavailable required infrastructure, invalid evidence after one retry, or exhaustion of the repair-round limit.
+Keep writer agents sequential; never allow concurrent writes to the submission. Before the counted review, require contract-test, input/domain-totality, verifier-adversarial, and runtime-harness sweeps, including the selected reference profile's hardening checklist. Pass reviewers only raw paths and role instructions, not author conclusions or desired verdicts. Require schema-2 review reports that continue after the first blocker and schema-2 repair ledgers that harden all three tasks. For repaired submissions, record and validate a from-scratch review before revealing prior findings for closure verification. Package only an immutable snapshot whose fingerprint equals the passing review. A PROVISIONAL result is not a pass. By default keep repairing and re-reviewing until PASS; stop only for missing authority, unavailable required infrastructure, invalid evidence after one retry, or an explicit user-supplied repair cap.
 
 At completion, report every agent and stage status, review verdicts, repair rounds, exact validation evidence, the final archive path, and checksum.
 ```
@@ -222,7 +222,7 @@ Review output: <WORKSPACE_ROOT>/reviews/<REFERENCE>/round-1
 
 Act as an independent reviewer, not the author. Do not assume the submission is correct and do not use author self-assessments. Do not modify the submission. Use disposable copies for commands that may write.
 
-Inspect the raw submission, reference task, bundled review rubric, and relevant repository standards. Evaluate package completeness, substantive originality, specification consistency, solvability, reproducibility, public/hidden separation, verifier correctness and shortcut resistance, oracle independence, resource limits, determinism, leakage, licensing, sensitive data, and evidence quality.
+Inspect the raw submission, reference task, bundled review rubric, reference-specific hardening checklist, and relevant repository standards. Continue after the first blocker. For every task, complete the contract-test matrix, input/domain-totality and accepted-state trace, verifier-adversarial sweep, and runtime-harness sweep. Evaluate package completeness, substantive originality, specification consistency, solvability, reproducibility, public/hidden separation, verifier correctness and shortcut resistance, oracle independence, resource limits, determinism, leakage, licensing, sensitive data, and evidence quality.
 
 Run every safe and feasible build, static check, oracle test, nop test, mutation/negative test, and targeted attack. Record exact commands, exit codes, rewards, run counts, and log paths. Attempt empty and constant outputs, public-case hard-coding, entry-point bypasses, protected-file changes, tolerance exploitation, timeout or memory boundaries, nondeterminism, and repeated execution where applicable. A passing oracle alone does not prove verifier quality.
 
@@ -246,7 +246,7 @@ Validate that the review evidence matches the current submission fingerprint. Tr
 
 Do not delete tests, weaken correctness, expose hidden data, hard-code answers, loosen tolerances to conceal errors, or change the core objective merely to obtain a pass. Re-run the originality and difficulty gates if a repair materially changes task scope or design.
 
-Add or update regression coverage for every fixed issue. Run the original public and hidden tests, verifier self-tests, static checks, oracle/nop runs, mutation/negative tests, resource checks, and relevant repeated runs. Maintain a repair ledger containing the finding ID, triage decision, root cause, changed files, validation commands, outcomes, and residual risk. Never record an unrun check as passing and do not declare the independent review passed.
+Add or update regression coverage for every fixed issue, then audit the adjacent boundary surface across all three tasks. Trace required/optional fields through validation, normalization, recovery, serialization, and comparison; cover missing, null, wrong-type, boolean-as-integer, malformed nested, duplicate, ordering, and scale cases as applicable. Run the original public and hidden tests, verifier self-tests, static checks, oracle/nop runs, mutation/negative tests, resource checks, and relevant repeated runs. Maintain a schema-2 repair ledger containing the finding ID, triage decision, root cause, changed files, hardening sweeps, validation commands, outcomes, and residual risk. Never record an unrun check as passing and do not declare the independent review passed.
 
 Report the change summary, evidence paths, unresolved items, and the corrected submission fingerprint. Require a fresh AI that participated in neither authoring nor repair to perform the next review.
 ```

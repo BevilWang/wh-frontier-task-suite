@@ -81,6 +81,15 @@ Test the smallest units first, then the full task. For each task:
 6. Inspect the final container boundary for answer leakage and artifact bloat.
 7. Compare instruction requirements against tests in both directions.
 
+Before declaring the author stage ready, complete four hardening sweeps for every task:
+
+1. **Contract matrix:** enumerate every observable instruction requirement and cite the test that enforces it; enumerate every test assertion and cite its instruction text.
+2. **Input/domain totality:** enumerate every accepted structured input, persisted record, declaration, parameter regime, protocol transition, or physical mode relevant to the selected reference. Exercise malformed, boundary, degenerate, transition, ordering, and scale cases where applicable. Trace every accepted value or state through the relevant validation, normalization, compilation, recovery, simulation, and output path so it cannot later raise, silently change meaning, or escape verification.
+3. **Verifier adversarial:** use seeded/generated or verifier-owned hidden variation, independent recomputation or invariants, and probes for empty/constant output, visible-case lookup, malformed artifacts, mutation, reward overwrite, and process survival as applicable.
+4. **Runtime harness:** execute the exact submitted verifier wrapper as its final unprivileged user. Confirm the CTRF destination is writable, reward files are root-controlled and binary, oracle earns `1`, nop earns `0`, and failures still emit usable evidence.
+
+Do not stop these sweeps after finding the first defect. Fix all observed material issues, rerun the full set, and treat every structural-validator warning as unresolved until it is either fixed or recorded with concrete counter-evidence.
+
 Use the repository commands in [references/frontier-standards.md](references/frontier-standards.md). If Harbor or Docker cannot run, complete all available static/unit checks and record the exact blocker and substitute evidence in the package README; never claim an unrun check passed.
 
 Run the bundled static validator from the skill directory:
@@ -95,7 +104,7 @@ Fix every `ERROR`. Review each `WARNING` instead of suppressing it.
 
 Update the package `README.md` with owner/contact, reference name and link, one-sentence summaries of all three tasks, modality, and exact validation status. Remove scratch artifacts, caches, generated build outputs, and unused files.
 
-Package only after validation succeeds:
+When an orchestrator identifies this as the author or repair stage, do not create a zip. Leave the live submission unpacked so independent review and repair cannot make an earlier archive stale. Package only in standalone use or the isolated release stage, and only after validation succeeds:
 
 ```text
 python scripts/submission_tool.py package PATH_TO/OWNER_submission \

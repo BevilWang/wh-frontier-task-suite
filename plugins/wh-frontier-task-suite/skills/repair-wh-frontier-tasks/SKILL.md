@@ -55,6 +55,8 @@ Keep the intended real-world outcome stable while repairing the narrowest correc
 
 Apply edits with minimal scope. After each root-cause group, run targeted tests before moving on.
 
+Then perform a repair halo across all three tasks, including tasks not named by the finding. Complete the schema-2 `hardening` matrix with `contract_matrix`, `input_domain_totality`, `verifier_adversarial`, and `repair_halo` evidence for each task. For every changed validator, parser, normalizer, serializer, recovery path, declaration, numerical regime, state transition, physical constraint, or verifier, enumerate adjacent and domain-equivalent boundary cases. Add regressions for malformed structure, boundary values, degeneracy, transitions, ordering, scale, and any reference-specific risks that apply. A targeted regression alone is not enough when the same root cause can recur on a sibling path or task.
+
 ## Run the full regression gate
 
 For every repaired task, run:
@@ -82,6 +84,8 @@ python scripts/repair_tool.py validate-ledger REPAIR_DIR/repair-ledger.json SUBM
 A `fixed` item must name changed files and passing validation evidence. A `rejected` or `not_applicable` item must contain reproducible counter-evidence. A blocker/major item cannot disappear from the ledger.
 
 Complete the top-level `regression` matrix with static, oracle, and nop commands and evidence for every task. `overall_status = complete` requires every regression entry to be `PASS`.
+
+New ledgers use schema version 2 and also require every top-level `hardening` sweep to be `PASS` before `overall_status = complete`. Historical schema-1 ledgers remain valid for resuming older runs.
 
 Write `repair.md` with finding-to-change mappings, commands and outcomes, residual limitations, and the new submission fingerprint. Avoid copying hidden expected values or large oracle excerpts.
 

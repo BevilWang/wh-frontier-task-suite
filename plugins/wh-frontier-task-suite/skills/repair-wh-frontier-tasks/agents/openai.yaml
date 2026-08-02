@@ -1,4 +1,4 @@
 interface:
   display_name: "Repair WH Frontier Tasks"
   short_description: "Fix benchmark tasks from second-review findings"
-  default_prompt: "Use $repair-wh-frontier-tasks to reproduce, fix, and revalidate every actionable finding in this independent review report."
+  default_prompt: "Use $repair-wh-frontier-tasks to repair validated findings and harden adjacent boundaries across all three tasks."

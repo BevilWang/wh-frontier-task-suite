@@ -30,6 +30,12 @@ VERDICTS = {"PASS", "FAIL", "PROVISIONAL"}
 EXECUTION_KINDS = {"static", "oracle", "nop"}
 SEVERITIES = {"blocker", "major", "minor", "info"}
 FINDING_STATUSES = {"open", "resolved", "accepted", "info"}
+AUDIT_SWEEPS = {
+    "contract_test_matrix",
+    "input_domain_totality",
+    "verifier_adversarial",
+    "runtime_harness",
+}
 
 
 def sha256(path: Path) -> str:
@@ -166,7 +172,7 @@ def build_snapshot(submission: Path, reference: Path) -> dict:
                 seen[fingerprint] = path.relative_to(submission).as_posix()
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "submission": str(submission),
         "reference": str(reference),
         "source_fingerprint": digest.hexdigest(),
@@ -203,10 +209,15 @@ def cmd_init_report(args: argparse.Namespace) -> int:
     packet_path = Path(args.packet).resolve()
     packet = json.loads(packet_path.read_text(encoding="utf-8"))
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "submission": packet["submission"],
         "source_fingerprint": packet["source_fingerprint"],
-        "reviewer": {"independent": True, "creator_context_seen": False, "identity": "TODO"},
+        "reviewer": {
+            "independent": True,
+            "creator_context_seen": False,
+            "stopped_after_first_blocker": False,
+            "identity": "TODO",
+        },
         "verdict": "PROVISIONAL",
         "confidence": 0.0,
         "summary": "TODO",
@@ -216,6 +227,22 @@ def cmd_init_report(args: argparse.Namespace) -> int:
                 "task": task,
                 "verdict": "PROVISIONAL",
                 "execution": [{"kind": kind, "status": "NOT_RUN", "command": "TODO", "evidence": "TODO"} for kind in sorted(EXECUTION_KINDS)],
+            }
+            for task in packet["tasks"]
+        ],
+        "audit_sweeps": [
+            {
+                "task": task,
+                "checks": [
+                    {
+                        "name": name,
+                        "status": "FAIL",
+                        "evidence": ["TODO"],
+                        "rationale": "TODO",
+                        "finding_ids": ["TODO"],
+                    }
+                    for name in sorted(AUDIT_SWEEPS)
+                ],
             }
             for task in packet["tasks"]
         ],
@@ -230,8 +257,9 @@ def cmd_init_report(args: argparse.Namespace) -> int:
 
 def validate_report(packet: dict, report: dict) -> list[str]:
     errors: list[str] = []
-    if report.get("schema_version") != 1:
-        errors.append("schema_version must be 1")
+    schema_version = report.get("schema_version")
+    if schema_version not in {1, 2}:
+        errors.append("schema_version must be 1 or 2")
     if report.get("submission") != packet.get("submission"):
         errors.append("submission does not match evidence packet")
     if report.get("source_fingerprint") != packet.get("source_fingerprint"):
@@ -239,6 +267,8 @@ def validate_report(packet: dict, report: dict) -> list[str]:
     reviewer = report.get("reviewer", {})
     if reviewer.get("independent") is not True or reviewer.get("creator_context_seen") is not False:
         errors.append("reviewer must attest independent=true and creator_context_seen=false")
+    if schema_version == 2 and reviewer.get("stopped_after_first_blocker") is not False:
+        errors.append("schema 2 reviewer must attest stopped_after_first_blocker=false")
     if not reviewer.get("identity") or reviewer.get("identity") == "TODO":
         errors.append("reviewer identity must be completed")
     if report.get("verdict") not in VERDICTS:
@@ -296,6 +326,43 @@ def validate_report(packet: dict, report: dict) -> list[str]:
         if task_result.get("verdict") == "PROVISIONAL" and "FAIL" in task_execution_statuses:
             errors.append(f"task PROVISIONAL cannot hide failed execution for {task_result.get('task')}")
 
+    failed_audit_sweeps: list[tuple[str, str, list[str]]] = []
+    if schema_version == 2:
+        audit_sweeps = report.get("audit_sweeps", [])
+        audit_tasks = [item.get("task") for item in audit_sweeps if isinstance(item, dict)] if isinstance(audit_sweeps, list) else []
+        if sorted(audit_tasks) != sorted(packet.get("tasks", [])) or len(audit_tasks) != len(packet.get("tasks", [])):
+            errors.append("audit_sweeps must cover every packet task exactly once")
+        for audit in audit_sweeps if isinstance(audit_sweeps, list) else []:
+            if not isinstance(audit, dict):
+                errors.append("audit_sweeps entries must be objects")
+                continue
+            task = audit.get("task")
+            checks = audit.get("checks", [])
+            names = {check.get("name") for check in checks if isinstance(check, dict)}
+            if names != AUDIT_SWEEPS or len(checks) != len(AUDIT_SWEEPS):
+                errors.append(f"audit_sweeps for {task} must cover every exhaustive source sweep exactly once")
+            for check in checks:
+                if not isinstance(check, dict):
+                    errors.append(f"audit_sweeps checks for {task} must be objects")
+                    continue
+                name = check.get("name")
+                status = check.get("status")
+                if status not in {"PASS", "FAIL"}:
+                    errors.append(f"audit sweep {name} for {task} must be PASS or FAIL")
+                evidence = check.get("evidence")
+                if not isinstance(evidence, list) or not evidence or any(not isinstance(entry, str) or not entry.strip() or entry == "TODO" for entry in evidence):
+                    errors.append(f"audit sweep {name} for {task} requires completed evidence")
+                if not isinstance(check.get("rationale"), str) or not check.get("rationale", "").strip() or check.get("rationale") == "TODO":
+                    errors.append(f"audit sweep {name} for {task} requires a completed rationale")
+                finding_ids = check.get("finding_ids", [])
+                if status == "FAIL":
+                    if not isinstance(finding_ids, list) or not finding_ids or any(not isinstance(item, str) or not item.strip() or item == "TODO" for item in finding_ids):
+                        errors.append(f"failed audit sweep {name} for {task} requires finding_ids")
+                        finding_ids = []
+                    failed_audit_sweeps.append((task, name, finding_ids))
+                elif finding_ids not in ([], None):
+                    errors.append(f"passing audit sweep {name} for {task} must not cite finding_ids")
+
     findings = report.get("findings", [])
     if not isinstance(findings, list):
         errors.append("findings must be a list")
@@ -329,6 +396,26 @@ def validate_report(packet: dict, report: dict) -> list[str]:
         if finding.get("severity") in {"blocker", "major"} and finding.get("status") == "open":
             material_findings = True
 
+    open_material_by_id = {
+        finding.get("id"): finding
+        for finding in findings
+        if isinstance(finding, dict)
+        and finding.get("severity") in {"blocker", "major"}
+        and finding.get("status") == "open"
+    }
+    task_verdict_by_name = {
+        item.get("task"): item.get("verdict")
+        for item in task_results
+        if isinstance(item, dict)
+    }
+    for task, name, finding_ids in failed_audit_sweeps:
+        if task_verdict_by_name.get(task) != "FAIL":
+            errors.append(f"failed audit sweep {name} requires task FAIL for {task}")
+        for finding_id in finding_ids:
+            finding = open_material_by_id.get(finding_id)
+            if finding is None or finding.get("task") not in {task, "package"}:
+                errors.append(f"failed audit sweep {name} for {task} cites no matching open material finding: {finding_id}")
+
     limitations = report.get("limitations", [])
     if not isinstance(limitations, list):
         errors.append("limitations must be a list")
@@ -337,7 +424,7 @@ def validate_report(packet: dict, report: dict) -> list[str]:
         errors.append("limitations must contain non-empty completed strings")
 
     criterion_statuses = [item.get("status") for item in criteria if isinstance(item, dict)]
-    has_failure = "FAIL" in criterion_statuses or "FAIL" in execution_statuses
+    has_failure = "FAIL" in criterion_statuses or "FAIL" in execution_statuses or bool(failed_audit_sweeps)
     has_not_run = "NOT_RUN" in criterion_statuses or "NOT_RUN" in execution_statuses
     if report.get("verdict") == "PASS" and (
         has_failure

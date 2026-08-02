@@ -48,6 +48,22 @@ def base_ledger() -> dict:
     }
 
 
+def base_ledger_v2() -> dict:
+    ledger = base_ledger()
+    ledger["schema_version"] = 2
+    ledger["hardening"] = [
+        {
+            "task": task,
+            "checks": [
+                {"name": name, "status": "PASS", "command": f"audit-{name}", "evidence": f"{name}.md"}
+                for name in sorted(repair_tool.HARDENING_SWEEPS)
+            ],
+        }
+        for task in ledger["task_manifest"]
+    ]
+    return ledger
+
+
 class RepairToolTest(unittest.TestCase):
     def test_fingerprint_matches_verification_skill(self) -> None:
         review_tool = load_review_tool()
@@ -137,6 +153,19 @@ class RepairToolTest(unittest.TestCase):
         ledger["regression"][0]["checks"][1]["status"] = "NOT_RUN"
         errors = repair_tool.validate_ledger(ledger, SUBMISSION.resolve())
         self.assertTrue(any("regression PASS" in error for error in errors))
+
+    def test_schema_two_complete_requires_full_hardening(self) -> None:
+        ledger = base_ledger_v2()
+        self.assertEqual(repair_tool.validate_ledger(ledger, SUBMISSION.resolve()), [])
+        ledger["hardening"][0]["checks"][0]["status"] = "NOT_RUN"
+        errors = repair_tool.validate_ledger(ledger, SUBMISSION.resolve())
+        self.assertTrue(any("hardening sweep" in error for error in errors))
+
+    def test_schema_two_hardening_covers_every_task(self) -> None:
+        ledger = base_ledger_v2()
+        ledger["hardening"].pop()
+        errors = repair_tool.validate_ledger(ledger, SUBMISSION.resolve())
+        self.assertTrue(any("hardening must cover every task" in error for error in errors))
 
 
 if __name__ == "__main__":

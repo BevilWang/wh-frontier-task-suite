@@ -67,7 +67,7 @@ Use a disposable copy for any command that can write into a task. Do not browse 
 
 ## Perform semantic review
 
-Evaluate all rubric criteria independently for each task and for the package. In particular:
+Evaluate all rubric criteria independently for each task and for the package. Continue after the first blocker: a valid schema-2 report must exhaust all tasks and record every material defect visible from source even when runtime execution has already failed. In particular:
 
 - map every instruction requirement to tests and every test behavior back to instruction text;
 - compare objective, data/system, core reasoning, artifacts, oracle, hidden variation, and verifier against the reference;
@@ -75,6 +75,8 @@ Evaluate all rubric criteria independently for each task and for the package. In
 - challenge the verifier with nop, constants, visible-case hard-coding, input mutation, test discovery, reward overwrite, daemon survival, and malformed artifacts where applicable;
 - check that difficulty comes from realistic domain work rather than volume, obscurity, missing information, or brittle formatting;
 - verify the oracle is legitimate, reproducible, and feasible within declared resources.
+
+Record four source sweeps for every task in `audit_sweeps`: `contract_test_matrix`, `input_domain_totality`, `verifier_adversarial`, and `runtime_harness`. Each sweep must cite completed evidence and be `PASS` or `FAIL`; a failed sweep must cite a matching open blocker/major finding and force that task to `FAIL`. For input/domain totality, enumerate every accepted input, state, declaration, parameter regime, protocol transition, or physical mode relevant to the selected reference. Trace accepted values through validation, normalization, serialization, recovery, compilation, simulation, and output as applicable. Probe missing, null, wrong-type, malformed nested, duplicate, ordering, boundary, degeneracy, transition, and scale cases where meaningful. Do not infer that a generated suite is complete merely because it uses randomness.
 
 Do not expose hidden verifier data or oracle implementation details in the human-facing summary. Cite file paths and line numbers tightly enough that another reviewer can reproduce each finding.
 
@@ -88,6 +90,8 @@ python scripts/review_tool.py init-report REVIEW_DIR/evidence.json \
 ```
 
 Replace all `TODO` values. Use only these verdicts:
+
+New reports use schema version 2. Keep `reviewer.stopped_after_first_blocker = false` and complete every `audit_sweeps` entry. The validator continues to accept historical schema-1 reports for repair/resume compatibility.
 
 - `PASS`: every criterion passes, all static checks pass, every oracle passes, every nop fails, and no material limitation remains;
 - `FAIL`: at least one blocking/major defect or failed required execution check exists;

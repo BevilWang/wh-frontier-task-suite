@@ -26,6 +26,8 @@ Concept-level failures require concept-level changes. Rewrite the objective, dat
 
 Create two lists: instruction requirements and test behaviors. Map both directions. For a hidden test requirement, either disclose the outcome contract or remove the accidental assertion. For an untested promise, add a meaningful test. Prefer functional invariants and hidden variants over source-string checks.
 
+After fixing the cited mismatch, audit the whole contract again. For structured data, list every required/optional field and trace validation into each later lookup, normalization, serialization, recovery, and comparison. Test absent, null, wrong-type, boolean-as-integer, malformed nested, duplicate, ordering, and scale cases as applicable. This repair halo prevents a fix for one field from leaving an equivalent sibling boundary open.
+
 ## Oracle and solvability
 
 Reproduce from a clean build. Fix dependencies, paths, resource declarations, algorithms, determinism, or data generation at their source. Never let the oracle read verifier-only truth. Calibrate numerical tolerances from justified error bounds and repeated runs.

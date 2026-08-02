@@ -76,6 +76,8 @@ Create two temporary lists:
 
 Map each instruction requirement to at least one meaningful test. Map each test assertion to explicit instruction language. Remove or document incidental implementation checks. Pay special attention to filenames, schemas, tolerances, performance bounds, preservation constraints, invalid inputs, hidden variations, and side effects.
 
+For structured inputs, add a field-totality table that names every required and optional field and covers missing, null, wrong-type, boolean-as-integer, malformed nested, duplicate, ordering, and scale cases where applicable. Follow accepted data through normalization, sorting, serialization, and recovery: validation must guarantee every later indexed field and invariant. This sweep is required even when another blocker is already known.
+
 ## Leakage and shortcut audit
 
 - Search the environment image and build context for expected outputs, answer keys, test fixtures, solution code, hidden configs, and revealing filenames.
@@ -83,3 +85,7 @@ Map each instruction requirement to at least one meaningful test. Map each test 
 - Try nop, trivial constant output, visible-fixture hard-coding, test-file discovery, reward-file overwrite, background-process survival, and protected-input mutation.
 - Prefer verifier-owned hidden inputs, independent recomputation, invariants, metamorphic checks, and multiple equivalent cases.
 - Do not make the task hard by disabling the open internet, withholding necessary specifications, or relying on obscure facts alone.
+
+## Windows runtime path
+
+Set `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8` for Harbor commands on non-UTF-8 Windows hosts. Before a runtime stage, require `harbor --version` and `docker version` to succeed. For `WinError 206` or long-path failures, copy the disposable task, rubric, and job directory beneath one short workspace-owned directory; optionally map that directory to a temporary drive with `subst`, pass Harbor `--jobs-dir` explicitly, and remove the mapping afterward. Never shorten paths by moving or mutating the reviewed submission.

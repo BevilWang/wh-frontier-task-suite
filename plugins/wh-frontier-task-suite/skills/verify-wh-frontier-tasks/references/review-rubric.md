@@ -4,6 +4,15 @@ Evaluate every criterion as `PASS`, `FAIL`, `WARN`, or `NOT_RUN`. A `FAIL` with 
 
 ## Required criteria
 
+Before assigning criterion verdicts, complete four exhaustive source sweeps for each task and keep reading after any first blocker:
+
+- `contract_test_matrix`: map every observable promise to tests and every graded behavior back to instruction text;
+- `input_domain_totality`: enumerate every accepted input, state, declaration, parameter regime, protocol transition, or physical mode, then trace it through the relevant validation, normalization, compilation, recovery, simulation, and output paths; cover malformed, boundary, degenerate, transition, ordering, and scale cases where applicable;
+- `verifier_adversarial`: assess generated/hidden variation, independent expected-state computation, and credible shortcuts rather than counting tests;
+- `runtime_harness`: inspect and, when feasible, execute privilege drop, CTRF/reward permissions, binary scoring, failure paths, and process cleanup.
+
+A runtime blocker does not excuse the source sweeps. A failed sweep requires an open blocker/major finding and a task `FAIL`.
+
 ### structure
 
 Confirm one package README, exactly three independent `task-N-slug` directories, required task files/directories, valid task names and taxonomy, complete metadata, canary, absolute paths, timeout sentence, anti-cheat sentence, and correct zip naming when an archive exists.

@@ -49,6 +49,8 @@ class SubmissionToolTest(unittest.TestCase):
             text = text.replace("TODO", "completed")
             if path.name == "task.toml":
                 text = text.replace("expert_time_estimate_hours = 0", "expert_time_estimate_hours = 4")
+            if path.name.startswith("test_") and path.suffix == ".py":
+                text += "\n# Seeded variation marker for the completed test fixture.\nimport random\nrng = random.Random(7)\n"
             path.write_text(text, encoding="utf-8", newline="\n")
 
     def test_scaffold_fails_until_completed(self) -> None:
@@ -78,6 +80,33 @@ class SubmissionToolTest(unittest.TestCase):
                 names = archive.namelist()
             self.assertIn("wh_submission/README.md", names)
             self.assertEqual(sum(name.endswith("/task.toml") for name in names), 3)
+
+    def test_fixed_only_verifier_is_rejected(self) -> None:
+        with self.temporary_directory() as directory:
+            root = self.make_submission(Path(directory))
+            self.complete_placeholders(root)
+            test_file = root / "task-1-replica-repair" / "tests" / "test_outputs.py"
+            test_file.write_text(
+                "def test_one(): assert True\n"
+                "def test_two(): assert True\n"
+                "def test_three(): assert True\n",
+                encoding="utf-8",
+            )
+            findings = submission_tool.validate(root)
+            self.assertTrue(any("fixed-only" in item.message for item in findings))
+
+    def test_unprivileged_ctrf_requires_writable_temp_directory(self) -> None:
+        with self.temporary_directory() as directory:
+            root = self.make_submission(Path(directory))
+            self.complete_placeholders(root)
+            wrapper = root / "task-1-replica-repair" / "tests" / "test.sh"
+            wrapper.write_text(
+                "#!/bin/sh\ntmp=$(mktemp -d)\n"
+                "setpriv --reuid nobody pytest --ctrf \"$tmp/ctrf.json\"\n",
+                encoding="utf-8",
+            )
+            findings = submission_tool.validate(root)
+            self.assertTrue(any("CTRF output" in item.message for item in findings))
 
 
 if __name__ == "__main__":

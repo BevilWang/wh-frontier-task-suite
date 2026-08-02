@@ -1,4 +1,4 @@
 interface:
   display_name: "Verify WH Frontier Tasks"
   short_description: "Independently review generated benchmark tasks"
-  default_prompt: "Use $verify-wh-frontier-tasks to have an independent second AI audit this three-task Frontier-Bench submission."
+  default_prompt: "Use $verify-wh-frontier-tasks to exhaustively and independently audit this three-task Frontier-Bench submission."

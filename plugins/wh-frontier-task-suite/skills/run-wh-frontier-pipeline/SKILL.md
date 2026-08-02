@@ -1,93 +1,82 @@
 ---
 name: run-wh-frontier-pipeline
-description: Orchestrate the complete Frontier-Bench task lifecycle inside one Codex task by spawning isolated author, reviewer, repair, re-review, and release subagents against the plugin's bundled Frontier-Bench references. Use when the user wants to create three original tasks from a supported reference and complete independent review and repair without manually opening separate Codex tasks or cloning Frontier-Bench; when coordinating create-wh-frontier-tasks, verify-wh-frontier-tasks, and repair-wh-frontier-tasks; or when resuming a saved pipeline run from its artifact directories.
+description: Orchestrate the complete Frontier-Bench task lifecycle inside one Codex task by spawning isolated author, hardener, reviewer, repair, re-review, and release subagents against the plugin's bundled references. Use when the user wants three original tasks carried through exhaustive independent review, evidence-backed repair, and immutable release; when coordinating create-wh-frontier-tasks, verify-wh-frontier-tasks, and repair-wh-frontier-tasks; or when resuming a saved pipeline run.
 ---
 
 # Run WH Frontier Pipeline
 
-Run the author-review-repair-release workflow as a coordinator. Keep stage decisions evidence-based and preserve reviewer independence through isolated subagent contexts and file-based handoffs.
+Coordinate an evidence-gated author-hardening-review-repair-release workflow. Preserve reviewer independence, keep one writer at a time, and treat validated disk artifacts as authoritative.
 
-## Require inputs
+## Resolve inputs and run root
 
-Obtain:
+Require a supported reference, writable workspace root, owner, contact, and real submission date. A maximum repair-round count is an optional user safety cap, not a default. When the user omits it, keep repairing and independently re-reviewing until a validated `PASS` or a genuine external blocker. Resolve the bundled Frontier-Bench root as `../../fb`; validate it with the creator skill's `validate_reference_bundle.py --reference ... --json` and use its returned semantic paths.
 
-- a supported reference name;
-- a writable workspace root;
-- owner, contact, and real submission date;
-- an optional maximum repair-round count, defaulting to `2`.
+Create `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` and use the last directory as `RUN_ID`. Keep author output, hardening evidence, reviews, repairs, release artifacts, and `pipeline-state.json` there. Record every spawned agent, stage transition, fingerprint, verdict, repair count, command outcome, blocker, and release artifact. Never store hidden answers in state.
 
-Resolve the default Frontier-Bench root relative to this skill as `../../fb`. Run the creator skill's `validate_reference_bundle.py BUNDLED_FRONTIER_ROOT --reference REFERENCE --json` and use the returned `task`, `checks`, `rubric`, `taxonomy`, and `template` paths. Do not append canonical directory names: the bundled snapshot uses a Windows-safe short layout, while the resolver also supports canonical external roots on Windows, macOS, and Linux. Use an external root only when the user explicitly supplies one and it passes validation.
+Read [references/orchestration-protocol.md](references/orchestration-protocol.md) before spawning. Require collaboration tools and use `fork_turns="none"` for every stage agent.
 
-Derive one run root under `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` and use the final directory name as `RUN_ID`. Keep author output, reviews, repairs, release artifacts, and `pipeline-state.json` under that root. Record inputs, current state, agent names, artifact paths, verdicts, repair rounds, blockers, and final release metadata without storing hidden answers.
+## Preflight runtime
 
-Read [references/orchestration-protocol.md](references/orchestration-protocol.md) before spawning any agent.
+Before authoring and again before every stage that needs execution:
 
-## Confirm orchestration support
+1. On Windows set `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8` for Harbor commands.
+2. Require `harbor --version` and `docker version` to succeed. If Docker is installed but stopped, request only the approval needed to start Docker Desktop, then retry. Do not spend a review or repair round on an infrastructure-only failure that can be corrected first.
+3. Record available Bash/static-check support. On Windows long-path failures, use a disposable short root containing short task aliases, a copied rubric, and an explicit short `--jobs-dir`; optionally map that root with `subst`. Keep the reviewed submission immutable and remove only the disposable mapping afterward.
+4. If required infrastructure remains unavailable, record `PROVISIONAL` evidence and stop unless the user supplies the missing authority or service.
 
-Require the Codex collaboration tools for spawning and waiting on subagents. Use `spawn_agent` with `fork_turns="none"` for every stage agent. Do not use user-owned tasks or ask the user to open another task.
+Respect the host sandbox. Never disable it, request blanket bypasses, or redirect output into the plugin cache.
 
-When running from the Codex app, keep the run root inside the user-selected writable workspace. Treat the host sandbox and approval policy as authoritative: never retry by disabling the sandbox, never request blanket bypass flags, and never instruct the user to switch to the CLI. If Docker, Harbor, or another host service needs access outside ordinary workspace permissions, request only the narrow command approval needed for that stage and record the result in `pipeline-state.json`.
+## 1. Author without packaging
 
-If subagent tools are unavailable, stop and state that this skill requires a Codex surface with multi-agent support. Do not simulate independent review in the coordinator context.
-
-## Coordinate stages
-
-### 1. Author
-
-Spawn one isolated author agent named `frontier_author_RUN_ID`. Give it only the raw input paths, owner/contact/date, output path, and this instruction:
+Spawn `frontier_author_RUN_ID` with raw input paths and:
 
 ```text
-Use $create-wh-frontier-tasks to create, validate, and prepare the complete three-task submission. Write only under <AUTHOR_OUTPUT> and permitted disposable build locations. Record exact validation evidence in the submission README. Return a concise status, but treat files on disk as authoritative.
+Use $create-wh-frontier-tasks to create and validate the complete unpacked three-task submission. Write only under <AUTHOR_OUTPUT> and permitted disposable build locations. Complete all four author hardening sweeps and record exact evidence. Do not create a zip; packaging belongs only to the release stage.
 ```
 
-Wait for completion. Inspect the produced submission and run the creator structural validator before continuing. Do not pass the author's reasoning or self-assessment to reviewers.
+Wait for completion. Run the creator validator, require zero errors, and resolve every warning or record concrete counter-evidence. Confirm the submission has exactly three tasks. An author-created zip is stale-by-design and must never be treated as a release artifact.
 
-### 2. Independent review
+## 2. Fresh pre-review hardening
 
-Spawn a new isolated agent named `frontier_review_RUN_ID_r1`. Pass only the raw submission path, reference path, Frontier-Bench root, and review output path. Explicitly mark it as a coordinator-invoked isolated reviewer so `$verify-wh-frontier-tasks` performs the review directly instead of spawning another reviewer.
+Before the counted independent review, spawn a new writer `frontier_hardener_RUN_ID`. Pass the raw submission, raw reference, standards, the selected profile's reference-specific hardening checklist, and a hardening output directory, but no author reasoning. Instruct it to use `$create-wh-frontier-tasks` for a full adversarial author gate: contract-test matrices, input/domain totality and accepted-state tracing, generated/hidden verifier depth, exact unprivileged CTRF/reward execution, oracle/nop, leakage, and shortcut probes. It may fix defects and must leave evidence under the hardening directory; it must not package.
 
-Wait for `review.json`, `review.md`, and evidence snapshots. Validate the report and source immutability with the verifier skill's scripts. Read the machine-readable verdict from disk; do not infer it from the agent's final message.
+Wait, rerun the structural validator, fingerprint the hardened submission, and update state. This stage is not an independent verdict and does not consume a repair round. Its purpose is to remove preventable author defects before reviewer budget begins.
 
-### 3. Decide
+## 3. Exhaustive independent review
 
-- On `PASS`, proceed to release.
-- On `FAIL`, proceed to repair if the repair-round limit is not exhausted.
-- On `PROVISIONAL`, retry only the missing checks that are feasible within existing authority. If the missing evidence requires unavailable infrastructure, credentials, or user authority, stop with a precise blocker. Do not turn `PROVISIONAL` into `PASS`.
-- On an invalid or missing report, send one follow-up to the same reviewer to complete or correct the report. If it still fails validation, stop the run as blocked.
+Spawn `frontier_review_RUN_ID_r1` as a coordinator-invoked isolated reviewer. Pass only the raw hardened submission, raw reference, resolved Frontier-Bench root, evidence path, and review output. Require `$verify-wh-frontier-tasks` schema-2 output and explicitly require the reviewer to continue after the first blocker and finish all four source sweeps for all three tasks.
 
-### 4. Repair
+Wait for `evidence.json`, `review.json`, `review.md`, and the post-review fingerprint. Validate the report and source immutability with the verifier scripts. Read the verdict from the validated JSON, never from prose.
 
-Spawn a new isolated agent named `frontier_repair_RUN_ID_rN`. Give it the submission, reference, validated review, evidence snapshot, repair output, and Frontier-Bench paths. Explicitly identify it as a coordinator-invoked isolated repairer so `$repair-wh-frontier-tasks` returns control after the validated ledger instead of spawning a reviewer. Instruct it to preserve the original review and update only the submission and repair directory.
+## 4. Decide
 
-Wait for a valid `repair-ledger.json` and corrected submission fingerprint. Run the repair ledger validator. Do not accept a repair status based only on prose.
+- `PASS`: proceed to release.
+- `FAIL`: repair if the repair budget remains.
+- `PROVISIONAL`: retry only missing checks after re-running runtime preflight. If infrastructure or authority remains unavailable, stop precisely; never convert it to `PASS`.
+- Invalid/missing report: follow up once with the same reviewer. Stop if it remains invalid.
 
-### 5. Fresh re-review
+## 5. Repair with full hardening halo
 
-Spawn a new isolated agent named `frontier_review_RUN_ID_rN+1`. Pass the corrected raw submission, reference, Frontier-Bench root, and a new `from-scratch/` review directory. Do not pass the old verdict, old review path, repair ledger path, author summary, repair rationale, or expected outcome in the initial prompt.
+For repair round `N`, spawn `frontier_repair_RUN_ID_rN` with the submission, validated authoritative review, matching evidence, reference paths, and repair directory. Identify it as a coordinator-invoked isolated repairer. Require `$repair-wh-frontier-tasks` schema-2 output, root-cause fixes, and all four hardening sweeps for every task, including tasks not named in the finding.
 
-Instruct the reviewer to perform a direct review and write a complete, validated assessment under `from-scratch/`. Validate that report and source immutability before revealing prior-cycle artifacts.
+Wait for a valid `repair-ledger.json`, `repair.md`, and new fingerprint. Validate the ledger. Do not accept prose or a targeted regression alone; the ledger must preserve imported items and record contract matrix, input/domain totality, adversarial verifier, repair halo, static, oracle, and nop evidence, including the selected profile's reference-specific risks.
 
-Then use `followup_task` on the same reviewer. Provide the previous review and validated `repair-ledger.json`; instruct it to verify closure and regressions without erasing its recorded independent assessment, and to write the authoritative report under `closure/`. Validate the closure report and source immutability. Use only the closure report as the stage verdict.
+## 6. Fresh re-review and closure
 
-Loop through repair and fresh re-review until a review returns `PASS` or the repair-round limit is exhausted.
+Spawn `frontier_review_RUN_ID_rN+1` with only the corrected raw submission, raw reference, root, and new `from-scratch/` directory. Do not disclose previous verdicts, findings, ledger, rationale, or desired outcome. Require a complete schema-2 from-scratch report and validate it before revealing prior-cycle artifacts.
 
-### 6. Release
+Then use `followup_task` on the same reviewer with the previous review and validated repair ledger. Require closure/regression verification without erasing the recorded from-scratch assessment; write the authoritative report under `closure/`. Validate the closure report and immutability. Use only the closure verdict.
 
-After a validated fresh `PASS`, confirm the live submission fingerprint still equals the passing review fingerprint. Create an immutable release snapshot or a disposable copy whose fingerprint matches that review. All metadata, cleanup, and content changes must have occurred before the passing review.
+Loop through repair and re-review until `PASS`. With the default uncapped policy, continue while each round makes evidence-backed progress. Stop only for a genuine external blocker, repeated invalid stage artifacts after the defined retry, or an explicit user-supplied repair cap being exhausted. If an explicit cap is exhausted, mark `BLOCKED`, preserve the latest narrow findings, and state exactly how to resume after raising or removing that cap. Never release a stale author zip.
 
-Spawn one isolated release agent named `frontier_release_RUN_ID`. Give it only the immutable reviewed snapshot, passing review, Frontier-Bench root, and release directory. Instruct it to use `$create-wh-frontier-tasks` only for read-only final validation, bit-for-bit packaging, checksum generation, clean extraction, and smoke testing. It must not redesign, edit, clean, rename, or update the reviewed submission.
+## 7. Immutable release
 
-Fingerprint the extracted archive submission and require it to equal the passing review fingerprint. If release validation discovers a required content change, stop release, return the submission to a new repair round, and require another fresh review. Verify the final archive exists and record its hash, inventory, fingerprint comparison, and smoke-test evidence. Update `pipeline-state.json` after every terminal stage transition so an interrupted run can be audited or resumed without relying on conversation history.
+After a validated fresh `PASS`, require the live fingerprint to equal the passing review fingerprint. Create an immutable snapshot or disposable bit-identical copy. All content changes must precede the passing review.
 
-## Report to the user
+Spawn `frontier_release_RUN_ID` with only the reviewed snapshot, passing review, Frontier-Bench root, and release directory. Instruct it to use `$create-wh-frontier-tasks` only for read-only final validation, bit-for-bit packaging, checksum, clean extraction, fingerprint comparison, and smoke testing. It must not edit, clean, rename, or update reviewed content.
 
-Return:
+Require the archive, extracted submission, and passing review fingerprints to match. If release discovers a required content change, return to repair plus fresh review. Update `pipeline-state.json` after every terminal stage and include every agent actually spawned.
 
-- the selected reference and run root;
-- each spawned agent and stage status;
-- every review verdict and repair round;
-- the final archive and checksum when released;
-- commands and checks actually run;
-- unresolved blockers or residual risks.
+## Report
 
-Do not claim completion unless the final independent review is `PASS` and release validation succeeds.
+Return the reference and run root; runtime preflight; every agent/stage; every verdict and repair round; commands and observed evidence; final archive/checksum/fingerprint when released; and unresolved blockers or resume instructions. Claim completion only after fresh `PASS` and successful immutable release.

@@ -65,6 +65,52 @@ Use a different real serving-stack contract and a different failure mechanism in
 
 Choose a different robot/control outcome, model, and motion family. Preserve hidden-config generation and first-principles dynamics checks. Do not reskin walk/jump/run trajectories or reuse their mode sequences and thresholds.
 
+## Reference-specific hardening checklists
+
+Apply the checklist for the selected reference during authoring, pre-review hardening, independent review, and every repair halo. These are minimum risk surfaces, not fixed test cases; derive new cases from each authored task's actual contract.
+
+### `wal-recovery-ordering`
+
+- Enumerate complete, incomplete, malformed, duplicated, gapped, reordered, and partially durable records or manifests. In particular, prove that every field accepted by a validator is safe for normalization and recovery.
+- Generate crash points and concurrent read/write schedules; check durable-prefix, visibility, replay idempotence, deep-copy isolation, and deterministic ordering invariants.
+- Exercise empty and large logs, sequence boundaries, repeated recovery, corrupted metadata, and performance guardrails without copying the reference fixtures.
+
+### `ontology-kg-querying`
+
+- Vary required and optional fields, identifiers, namespaces, filenames, source order, nulls, malformed records, dangling links, duplicates, and future unseen bundles.
+- Generate temporal conflicts, equivalent entities, deprecated facts, provenance combinations, and query orders; verify deterministic reconciliation, lineage, materialization, and direct-query semantics.
+- Trace every accepted source record through parsing, normalization, entity resolution, conflict resolution, graph construction, and result serialization.
+
+### `rs-archive-clone`
+
+- Cross product every supported command or transform with empty, Unicode, binary, boundary-size, oversized, truncated, and malformed inputs.
+- Probe invalid magic/version/length/checksum/operation cases and exact exit-code, stdout, stderr, determinism, and byte-layout compatibility.
+- Use behavioral probes and independently generated hidden combinations; reject public-vector lookup and implementations that cover only a happy-path layer.
+
+### `lean-midpoint-proof`
+
+- Preserve exact declarations, names, namespaces, imports, theorem signatures, and dependency order while accepting multiple valid proof terms.
+- Compile from a clean pinned environment; reject `sorry`, `admit`, unsafe additions, new axioms, target rewrites, declaration deletion, and build bypasses.
+- Audit allowed axioms and the full lemma graph, including unused or accidentally weakened premises and alternate proof strategies.
+
+### `ks-solver-cpp`
+
+- Generate independent parameter regimes, geometries, meshes, boundary/forcing cases, stiff or degenerate regimes, long-time cases, and refinement levels.
+- Check NaN/Inf, convergence, conservation or residuals, deterministic output, justified absolute/relative tolerances, adaptive resolution, and resource bounds.
+- Compare outcomes to independently generated high-accuracy truth while allowing sound alternative numerical methods and rejecting fixed tables or tolerance exploits.
+
+### `vllm-deepseek-streaming`
+
+- Exercise streaming and non-streaming paths, chunk partitions, batching, state reuse, concurrency, cancellation, timeout, cleanup, and repeated execution.
+- Reproduce failures deterministically without unavailable GPUs or services; test protocol boundaries and cross-module state transitions rather than a named patch location.
+- Accept alternative root-cause fixes, reject patch-text matching, and use verifier-owned variations that expose public-case hard-coding and flaky cleanup.
+
+### `biped-contact-dynamics`
+
+- Vary configuration schemas, robot parameters, initial/goal states, time grids, contact schedules, mode transitions, and hidden geometries; include malformed and singular cases.
+- Check endpoint conditions, continuity and smoothness, kinematics, dynamics, contact creation/release, friction, torque, collision, and safety constraints from first principles.
+- Accept multiple physically feasible trajectories while rejecting fixed-trajectory lookup, interpolation cheats, tolerance exploits, and visually plausible but dynamically invalid outputs.
+
 ## Originality gate
 
 For each proposed task, write a comparison table with these rows:
