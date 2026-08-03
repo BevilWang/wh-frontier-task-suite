@@ -78,7 +78,7 @@ setx PYTHONIOENCODING utf-8
 Use $run-wh-frontier-pipeline.
 
 Reference: wal-recovery-ordering
-Workspace root: E:\path\to\writable-workspace
+Workspace root: \path\to\writable-workspace
 Owner: Your Name
 Contact: name@example.com
 Submission date: YYYYMMDD
