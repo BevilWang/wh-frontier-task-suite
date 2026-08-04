@@ -14,13 +14,18 @@ Prefer evidence in this order:
 
 An AI concern without reproduction can justify investigation, but not a destructive redesign by itself.
 
+## Layout and slug repairs
+
+Keep the mandatory `task-N-<single-token-slug>` layout. The full directory name must have at most three hyphen-separated tokens. When renaming, update `task.toml` `[task].name` to end with the exact directory name. Never drop the `task-N` prefix to satisfy the slug check. Re-run the structural validator after any rename.
+
 ## Structure and packaging
 
 Repair missing files, names, metadata, canary, absolute paths, README fields, and archive layout. Remove only confirmed caches, build products, and unrelated artifacts. Preserve licensed or runtime-referenced data.
 
 ## Originality and difficulty
 
-Concept-level failures require concept-level changes. Rewrite the objective, data/system, core reasoning, artifact, hidden variation, or verifier, not just names or constants. Recheck all three tasks for accidental convergence after redesign. Ensure an expert solution remains achievable in hours.
+Concept-level failures require concept-level changes, not surface tweaks. If the task is a compact pure-function stub or removes the reference's coupled multi-module/concurrent/long-horizon work, redesign the subsystem rather than extending the stub. Preserve the abstract difficulty mechanism from the selected reference profile.
+ Rewrite the objective, data/system, core reasoning, artifact, hidden variation, or verifier, not just names or constants. Recheck all three tasks for accidental convergence after redesign. Ensure an expert solution remains achievable in hours.
 
 ## Specification-test alignment
 

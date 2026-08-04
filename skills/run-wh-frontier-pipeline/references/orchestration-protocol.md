@@ -37,7 +37,7 @@
 
 ## State machine
 
-Persist `repair_policy` in `pipeline-state.json`. The default is `{"mode":"until_pass","maximum_rounds":null}`. If the user explicitly supplies a cap, store `mode` as `capped` and the positive integer in `maximum_rounds`; never silently invent or lower a cap during resume.
+Persist `repair_policy` in `pipeline-state.json`. The default is `{"mode":"until_pass","maximum_rounds":5}`. If the user explicitly supplies a cap, store `mode` as `capped` and the positive integer in `maximum_rounds`; never silently invent or lower a cap during resume.
 
 ```text
 AUTHORING
@@ -76,6 +76,8 @@ AUTHORING
 - Submission fingerprint changed during review: invalidate that review and stop unless the change is proven to be disposable-copy output.
 - Release snapshot or extracted archive fingerprint differs from the passing review: stop release and return to repair plus fresh review.
 - `PROVISIONAL` caused by missing infrastructure: stop unless the missing check can be run within existing authority.
+- Repeated identical blocker/major finding fingerprint across two consecutive repair rounds: stop with `BLOCKED`; the repairer is not converging.
+
 - Repair ledger stale or invalid: stop and require a new review or corrected ledger.
 - Explicit user-supplied repair cap reached without `PASS`: stop and report the latest evidence. With no explicit cap, continue the evidence-backed repair/re-review loop until `PASS` or a genuine blocker.
 - An archive created before the passing review is stale and must not be published or described as a release artifact.

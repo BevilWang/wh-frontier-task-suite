@@ -1,7 +1,7 @@
 {
-  "name": "wh-frontier-task-suite",
-  "version": "0.8.0+codex.20260803000701",
-  "description": "Create three Frontier-Bench tasks and carry them through pre-review hardening, exhaustive independent audit, repair, re-review, and immutable release.",
+ "name": "wh-frontier-task-suite",
+  "version": "0.8.1+codex.20260805000000",
+ "description": "Create three Frontier-Bench tasks and carry them through pre-review hardening, exhaustive independent audit, repair, re-review, and immutable release.",
   "author": {
     "name": "BevilWang",
     "email": "wanghan.scut@gmail.com",

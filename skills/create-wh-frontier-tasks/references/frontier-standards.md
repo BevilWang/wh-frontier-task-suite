@@ -14,10 +14,13 @@ Use the bundled Frontier-Bench snapshot as the default source of truth. Use an e
 - Produce exactly three original tasks from one selected reference/subcategory.
 - Keep the three tasks in one modality where practical.
 - Name the archive `OWNER_Category_Subcategory_YYYYMMDD.zip`.
-- Put `README.md` and exactly three `task-N-short-name/` directories under `OWNER_submission/`.
+- Put `README.md` and exactly three `task-N-<single-token-slug>/` directories under `OWNER_submission/`. The bundled `check-task-slug.sh` enforces a maximum of three hyphen-separated tokens for the full directory name, so `<slug>` must be a single token.
+
 - Put `instruction.md`, `task.toml`, `environment/`, `solution/`, and `tests/` in every task.
 - State owner/contact, reference name/link, three one-line summaries, modality, and local validation status in the package README.
+- Remove generated artifacts (`__pycache__`, `*.pyc`, build outputs, scratch files) before packaging; the package command will reject or sanitize them, but do not rely on that.
 - Never copy reference data, answers, or tests; never submit a renamed or constant-swapped task.
+
 - Ensure the task and tests describe the same behaviors in both directions.
 - Keep ground truth in the verifier, never in the agent environment.
 - Explain why the work is hard for an agent but reasonable for a qualified human.

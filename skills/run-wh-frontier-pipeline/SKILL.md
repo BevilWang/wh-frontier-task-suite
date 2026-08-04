@@ -9,7 +9,8 @@ Coordinate an evidence-gated author-hardening-review-repair-release workflow. Pr
 
 ## Resolve inputs and run root
 
-Require a supported reference, writable workspace root, owner, contact, and real submission date. A maximum repair-round count is an optional user safety cap, not a default. When the user omits it, keep repairing and independently re-reviewing until a validated `PASS` or a genuine external blocker. Resolve the bundled Frontier-Bench root as `../../fb`; validate it with the creator skill's `validate_reference_bundle.py --reference ... --json` and use its returned semantic paths.
+Require a supported reference, writable workspace root, owner, contact, and real submission date. If the user does not supply a maximum repair-round count, default to a safety cap of **5 repair rounds**. Stop with `BLOCKED` when that cap is reached and tell the user exactly how to resume with a higher cap. When a cap is supplied, keep repairing and independently re-reviewing until a validated `PASS` or a genuine external blocker.
+ Resolve the bundled Frontier-Bench root as `../../fb`; validate it with the creator skill's `validate_reference_bundle.py --reference ... --json` and use its returned semantic paths.
 
 Create `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` and use the last directory as `RUN_ID`. Keep author output, hardening evidence, reviews, repairs, release artifacts, and `pipeline-state.json` there. Record every spawned agent, stage transition, fingerprint, verdict, repair count, command outcome, blocker, and release artifact. Never store hidden answers in state.
 
@@ -34,13 +35,15 @@ Spawn `frontier_author_RUN_ID` with raw input paths and:
 Use $create-wh-frontier-tasks to create and validate the complete unpacked three-task submission. Write only under <AUTHOR_OUTPUT> and permitted disposable build locations. Complete all four author hardening sweeps and record exact evidence. Do not create a zip; packaging belongs only to the release stage.
 ```
 
-Wait for completion. Run the creator validator, require zero errors, and resolve every warning or record concrete counter-evidence. Confirm the submission has exactly three tasks. An author-created zip is stale-by-design and must never be treated as a release artifact.
+Wait for completion. Run the creator validator, require zero errors, and resolve every warning or record concrete counter-evidence. Confirm the submission has exactly three tasks named `task-N-<single-token-slug>`. An author-created zip is stale-by-design and must never be treated as a release artifact.
+
 
 ## 2. Fresh pre-review hardening
 
 Before the counted independent review, spawn a new writer `frontier_hardener_RUN_ID`. Pass the raw submission, raw reference, standards, the selected profile's reference-specific hardening checklist, and a hardening output directory, but no author reasoning. Instruct it to use `$create-wh-frontier-tasks` for a full adversarial author gate: contract-test matrices, input/domain totality and accepted-state tracing, generated/hidden verifier depth, exact unprivileged CTRF/reward execution, oracle/nop, leakage, and shortcut probes. It may fix defects and must leave evidence under the hardening directory; it must not package.
 
-Wait, rerun the structural validator, fingerprint the hardened submission, and update state. This stage is not an independent verdict and does not consume a repair round. Its purpose is to remove preventable author defects before reviewer budget begins.
+Wait, rerun the structural validator **and every bundled static check that can execute on the host**, fingerprint the hardened submission, and update state. If the hardener cannot produce a structurally valid submission, do not consume a review round; return to author or stop. This stage is not an independent verdict and does not consume a repair round. Its purpose is to remove preventable author defects before reviewer budget begins.
+
 
 ## 3. Exhaustive independent review
 
@@ -67,7 +70,8 @@ Spawn `frontier_review_RUN_ID_rN+1` with only the corrected raw submission, raw 
 
 Then use `followup_task` on the same reviewer with the previous review and validated repair ledger. Require closure/regression verification without erasing the recorded from-scratch assessment; write the authoritative report under `closure/`. Validate the closure report and immutability. Use only the closure verdict.
 
-Loop through repair and re-review until `PASS`. With the default uncapped policy, continue while each round makes evidence-backed progress. Stop only for a genuine external blocker, repeated invalid stage artifacts after the defined retry, or an explicit user-supplied repair cap being exhausted. If an explicit cap is exhausted, mark `BLOCKED`, preserve the latest narrow findings, and state exactly how to resume after raising or removing that cap. Never release a stale author zip.
+Loop through repair and re-review until `PASS` or until the repair cap is reached. Track the fingerprint of open blocker/major findings; if the same blocker recurs in two consecutive repair rounds without new evidence of progress, stop with `BLOCKED` to prevent endless oscillation. Stop only for a genuine external blocker, repeated invalid stage artifacts after the defined retry, an explicit user-supplied repair cap being exhausted, or repeated finding fingerprints. If an explicit cap is exhausted, mark `BLOCKED`, preserve the latest narrow findings, and state exactly how to resume after raising or removing that cap. Never release a stale author zip.
+
 
 ## 7. Immutable release
 

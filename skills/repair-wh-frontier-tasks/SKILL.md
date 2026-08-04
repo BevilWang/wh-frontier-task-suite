@@ -7,6 +7,10 @@ description: Read an independent second-AI review.json/review.md for a Frontier-
 
 Convert the independent review into verified code and task changes. Treat reviewer claims as hypotheses until reproduced; treat deterministic failures as authoritative evidence.
 
+## Layout, naming, and packaging first
+
+If the review reports invalid task directory names or layout, fix that before any deeper repair. Every task directory must be `task-N-<single-token-slug>` with at most three hyphen-separated tokens total. Update `[task].name` to match the directory name. Never drop the `task-N` prefix. Re-run `python scripts/submission_tool.py validate` and resolve every ERROR before moving on.
+
 ## Establish inputs and protect user work
 
 Require the submission directory, `review.json`, its matching `evidence.json`, and the selected reference name or task. Default the Frontier-Bench root to the Windows-safe bundled snapshot at `../../fb` relative to this skill. Resolve semantic paths with the creator skill's `scripts/validate_reference_bundle.py ROOT --reference REFERENCE --json`; do not construct `tasks/`, checks, or rubric paths manually. The resolver supports canonical external roots and uses portable native paths on Windows, macOS, and Linux. Accept an external root only when explicitly supplied. Read [references/repair-playbook.md](references/repair-playbook.md).
@@ -23,6 +27,10 @@ python scripts/repair_tool.py intake SUBMISSION REVIEW_JSON EVIDENCE_JSON \
 ```
 
 Stop if the evidence fingerprint, report fingerprint, and current submission fingerprint differ. A stale report must be re-run with `$verify-wh-frontier-tasks`; do not force findings onto changed files.
+
+## Difficulty and originality failures
+
+If the reviewer finds that a task is too easy, too small, or insufficiently original, do not patch names, constants, or visible cases. Perform a concept-level redesign: change the real-world subsystem, the data/system, the core domain reasoning, the artifacts, the hidden variation, or the verifier so the task matches the selected reference profile's abstract difficulty mechanism. Update the private concept card, re-run the reference-specific hardening checklist, and re-validate with the structural validator.
 
 ## Triage every ledger item
 
@@ -74,7 +82,14 @@ Update the package README with truthful post-repair validation status. Do not ov
 
 ## Close the ledger
 
-Set `overall_status` to `complete` only when no item is pending or blocked. Validate:
+Before setting `overall_status` to `complete`, re-run:
+
+```text
+python scripts/submission_tool.py validate SUBMISSION
+```
+
+Require zero ERRORs and either zero WARNINGs or documented counter-evidence. Set `overall_status` to `complete` only when no item is pending or blocked and the structural validator passes.
+ Validate:
 
 ```text
 python scripts/repair_tool.py stamp-ledger REPAIR_DIR/repair-ledger.json SUBMISSION

@@ -5,6 +5,7 @@ import contextlib
 import io
 import os
 import tempfile
+import shutil
 import unittest
 import zipfile
 from pathlib import Path
@@ -35,7 +36,7 @@ class SubmissionToolTest(unittest.TestCase):
             reference="wal-recovery-ordering",
             reference_link="local:frontier-bench/tasks/wal-recovery-ordering",
             date="20260802",
-            slug=["replica-repair", "lease-reconcile", "index-snapshot"],
+            slug=["replica", "lease", "index"],
         )
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(submission_tool.cmd_init(args), 0)
@@ -85,7 +86,7 @@ class SubmissionToolTest(unittest.TestCase):
         with self.temporary_directory() as directory:
             root = self.make_submission(Path(directory))
             self.complete_placeholders(root)
-            test_file = root / "task-1-replica-repair" / "tests" / "test_outputs.py"
+            test_file = root / "task-1-replica" / "tests" / "test_outputs.py"
             test_file.write_text(
                 "def test_one(): assert True\n"
                 "def test_two(): assert True\n"
@@ -99,7 +100,7 @@ class SubmissionToolTest(unittest.TestCase):
         with self.temporary_directory() as directory:
             root = self.make_submission(Path(directory))
             self.complete_placeholders(root)
-            wrapper = root / "task-1-replica-repair" / "tests" / "test.sh"
+            wrapper = root / "task-1-replica" / "tests" / "test.sh"
             wrapper.write_text(
                 "#!/bin/sh\ntmp=$(mktemp -d)\n"
                 "setpriv --reuid nobody pytest --ctrf \"$tmp/ctrf.json\"\n",
@@ -108,6 +109,63 @@ class SubmissionToolTest(unittest.TestCase):
             findings = submission_tool.validate(root)
             self.assertTrue(any("CTRF output" in item.message for item in findings))
 
+
+
+    def test_init_rejects_multi_token_slug(self) -> None:
+        with self.temporary_directory() as directory:
+            args = argparse.Namespace(
+                output_parent=str(directory),
+                owner="wh",
+                contact="wh",
+                category="Software",
+                subcategory="Databases",
+                reference="wal-recovery-ordering",
+                reference_link="local:frontier-bench/tasks/wal-recovery-ordering",
+                date="20260802",
+                slug=["multi-token-slug", "lease", "index"],
+            )
+            with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+                submission_tool.cmd_init(args)
+
+    def test_task_directory_token_limit_is_enforced(self) -> None:
+        with self.temporary_directory() as directory:
+            root = self.make_submission(Path(directory))
+            self.complete_placeholders(root)
+            src = root / "task-1-replica"
+            dst = root / "task-1-replica-extra-token"
+            src.rename(dst)
+            toml = dst / "task.toml"
+            toml.write_text(
+                toml.read_text(encoding="utf-8").replace(
+                    'name = "z-bench/task-1-replica"',
+                    'name = "z-bench/task-1-replica-extra-token"',
+                ),
+                encoding="utf-8",
+            )
+            findings = submission_tool.validate(root)
+            self.assertTrue(any("more than 3 hyphen-separated tokens" in item.message for item in findings))
+
+    def test_package_excludes_pycache(self) -> None:
+        with self.temporary_directory() as directory:
+            parent = Path(directory)
+            root = self.make_submission(parent)
+            self.complete_placeholders(root)
+            (root / "task-1-replica" / "solution" / "__pycache__").mkdir(parents=True)
+            (root / "task-1-replica" / "solution" / "__pycache__" / "app.cpython-312.pyc").write_text("x")
+            archive_path = parent / "result.zip"
+            args = argparse.Namespace(
+                submission=str(root),
+                category="Software",
+                subcategory="Databases",
+                date="20260802",
+                output=str(archive_path),
+            )
+            shutil.rmtree(root / "task-1-replica" / "solution" / "__pycache__")
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(submission_tool.cmd_package(args), 0)
+            with zipfile.ZipFile(archive_path) as archive:
+                names = archive.namelist()
+            self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") for name in names))
 
 if __name__ == "__main__":
     unittest.main()

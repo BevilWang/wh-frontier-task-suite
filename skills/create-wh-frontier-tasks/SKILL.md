@@ -54,7 +54,24 @@ python scripts/submission_tool.py init OUTPUT_PARENT \
   --slug FIRST_SLUG --slug SECOND_SLUG --slug THIRD_SLUG
 ```
 
-Use lowercase hyphenated slugs. The command creates `OWNER_submission/README.md` and exactly three task directories. Replace every `TODO` and tailor every generated file; the skeleton is not a completed task.
+Use lowercase **single-token** slugs (e.g. `replica`, `lease`, `index`). The bundled `check-task-slug.sh` counts the whole directory name, so the created directory `task-N-<slug>` must have at most three hyphen-separated tokens. The command creates `OWNER_submission/README.md` and exactly three `task-N-<slug>` directories. Replace every `TODO` and tailor every generated file; the skeleton is not a completed task.
+
+Before implementing files, validate each concept card against the selected reference profile. Reject any idea whose oracle reduces to a compact pure-function stub or removes the reference's coupled multi-module, concurrent-visibility, crash-consistency, or long-horizon reasoning work. Preserve the abstract difficulty mechanism, not the implementation.
+
+Use this cross-reference table to check that every concept preserves the right difficulty class across all seven supported references:
+
+| Reference | Abstract difficulty mechanism the new task must preserve |
+| --- | --- |
+| `wal-recovery-ordering` | Coupled storage-pipeline bugs; crash consistency; concurrent visibility; durable-prefix/isolation invariants |
+| `ontology-kg-querying` | Reverse-engineer a rich schema; reconcile heterogeneous/temporal records; reasoning and hidden future bundles |
+| `rs-archive-clone` | Black-box behavioral reimplementation; layered binary formats; error correction; byte-level compatibility |
+| `lean-midpoint-proof` | Reusable formalization ladder; exact declarations/axioms; lemma dependency graph; no unproved steps |
+| `ks-solver-cpp` | High-accuracy nonlinear PDE on nontrivial geometry; oracle-only boundary/forcing; adaptive resolution |
+| `vllm-deepseek-streaming` | Intermittent protocol bug in a multi-layer serving stack; streaming chunk boundaries; focused regression |
+| `biped-contact-dynamics` | Hybrid-mode trajectory generation; hidden configurations; multibody consistency from first principles |
+
+If a concept would allow the oracle to be a one-page pure function, it is not preserving the reference mechanism. Redesign.
+
 
 ## Implement each task
 
@@ -77,7 +94,8 @@ Test the smallest units first, then the full task. For each task:
 2. Run the oracle and require reward `1`.
 3. Run nop and require reward `0`.
 4. Run the oracle at least five times when nondeterminism or concurrency exists.
-5. Run every repository static check and the implementation rubric.
+5. Run every repository static check and the implementation rubric, including the bundled `check-task-slug.sh` and `submission_tool.py validate`. Treat every ERROR as blocking.
+
 6. Inspect the final container boundary for answer leakage and artifact bloat.
 7. Compare instruction requirements against tests in both directions.
 
@@ -90,7 +108,8 @@ Before declaring the author stage ready, complete four hardening sweeps for ever
 
 Do not stop these sweeps after finding the first defect. Fix all observed material issues, rerun the full set, and treat every structural-validator warning as unresolved until it is either fixed or recorded with concrete counter-evidence.
 
-Use the repository commands in [references/frontier-standards.md](references/frontier-standards.md). If Harbor or Docker cannot run, complete all available static/unit checks and record the exact blocker and substitute evidence in the package README; never claim an unrun check passed.
+Use the repository commands in [references/frontier-standards.md](references/frontier-standards.md). Pay special attention to the task-directory naming rule: `task-N-<single-token-slug>` with at most three tokens total.
+ If Harbor or Docker cannot run, complete all available static/unit checks and record the exact blocker and substitute evidence in the package README; never claim an unrun check passed.
 
 Run the bundled static validator from the skill directory:
 
