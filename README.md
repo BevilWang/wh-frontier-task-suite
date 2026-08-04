@@ -52,6 +52,8 @@ codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 
 Run `codex plugin marketplace list` to confirm the marketplace name if it differs.
 
+See [docs/app-install.md](docs/app-install.md) for the full guide and a post-install verification checklist.
+
 ## Skills
 
 After installation, start a new Codex task and invoke any of the four skills:
@@ -92,20 +94,38 @@ setx PYTHONUTF8 1
 setx PYTHONIOENCODING utf-8
 ```
 
+## Development
+
+The repository is fully self-testing with only the Python standard library:
+
+```powershell
+python scripts/run_all_tests.py                                # all unit tests
+python scripts/validate_plugin_release.py                      # manifest + marketplace + repo hygiene
+python scripts/validate_windows_paths.py                       # Windows-safe path budget
+python skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py fb  # bundled references
+```
+
+GitHub Actions runs all four on every push and pull request (Windows and Ubuntu).
+
 ## Repository layout
 
 ```text
 .
-©À©¤©¤ .codex-plugin/plugin.json   # plugin manifest
-©À©¤©¤ .agents/plugins/marketplace.json  # Codex app marketplace entry
-©À©¤©¤ skills/                     # four Codex skills
-©À©¤©¤ fb/                         # bundled Frontier-Bench snapshot
-©À©¤©¤ docs/                       # installation and usage docs
-©À©¤©¤ scripts/                    # repository validation helpers
-©À©¤©¤ README.md                   # this file
-©¸©¤©¤ THIRD_PARTY_NOTICES.md      # third-party attribution
+â”œâ”€â”€ .codex-plugin/plugin.json   # plugin manifest
+â”œâ”€â”€ .agents/plugins/marketplace.json  # Codex app marketplace entry
+â”œâ”€â”€ .github/workflows/ci.yml    # Windows + Ubuntu CI matrix
+â”œâ”€â”€ .gitattributes              # LF line endings for scripts and config
+â”œâ”€â”€ skills/                     # four Codex skills
+â”œâ”€â”€ fb/                         # bundled Frontier-Bench snapshot
+â”œâ”€â”€ docs/                       # installation and usage docs
+â”œâ”€â”€ scripts/                    # repository validation helpers
+â”œâ”€â”€ LICENSE                     # MIT license for this project
+â”œâ”€â”€ README.md                   # this file
+â””â”€â”€ THIRD_PARTY_NOTICES.md      # third-party attribution
 ```
 
 ## License and provenance
 
-Built-in reference materials come from [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.
+This project (plugin code, skills, and tooling) is licensed under the [MIT License](LICENSE).
+
+The built-in reference materials come from [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench) and are distributed under the Apache License 2.0. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [fb/PROVENANCE.md](fb/PROVENANCE.md) for details.

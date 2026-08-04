@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows and Linux cover the two things this repo must guarantee:
+        # Windows-safe paths/checkouts and LF shell scripts for Linux containers.
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: python scripts/run_all_tests.py
+
+      - name: Validate plugin manifest and marketplace
+        run: python scripts/validate_plugin_release.py
+
+      - name: Validate all bundled references resolve
+        run: python skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py fb
+
+      - name: Validate Windows-safe repository paths
+        run: python scripts/validate_windows_paths.py
+
+      - name: Verify plain Git checkout from a deep app-like cache path
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'codex-app-cache\personal\wh-frontier-task-suite\0.8.2\workspace\repository'
+          git -c core.longpaths=false clone --no-hardlinks . $target

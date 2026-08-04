@@ -5,11 +5,11 @@
   },
   "plugins": [
     {
-     "name": "wh-frontier-task-suite",
-     "source": {
+      "name": "wh-frontier-task-suite",
+      "source": {
         "source": "local",
         "path": "."
-     },
+      },
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"

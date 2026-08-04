@@ -1,0 +1,27 @@
+# Normalize line endings across the repository.
+* text=auto
+
+# Scripts and container files must stay LF so they run unchanged in Linux containers and WSL.
+*.sh text eol=lf
+*.py text eol=lf
+Dockerfile* text eol=lf
+*.patch text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.tsv text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Binary assets must never be normalized. Git auto-detects binary content
+# (files containing NUL bytes) under text=auto; only force-mark formats that
+# are never text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.whl binary
