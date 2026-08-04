@@ -21,7 +21,13 @@ python scripts/validate_reference_bundle.py BUNDLED_FRONTIER_ROOT --reference RE
 
 Use the returned `task`, `checks`, `rubric`, `taxonomy`, and `template` paths instead of constructing them. The resolver understands both the bundled short layout and a canonical external Frontier-Bench checkout. Accept an external root only when the user explicitly supplies one and it validates successfully. Build paths with `pathlib` or the host's native path utilities; do not hard-code `/` or `\\` as a filesystem separator.
 
-Read [references/reference-profiles.md](references/reference-profiles.md) for the selected reference. Then inspect its `instruction.md`, `task.toml`, `README.md`, `environment/`, `solution/`, and `tests/` in that order. Read [references/frontier-standards.md](references/frontier-standards.md) before designing or validating tasks.
+Read [references/reference-profiles.md](references/reference-profiles.md) for the selected reference, including its resource and feasibility profile and domain authoring lens. Run the runnability report and factor image size, build-time network needs, compute class, and validation wall-clock into the three task designs; choose a reference the user's hardware can build and validate:
+
+```text
+python scripts/runnability_report.py BUNDLED_FRONTIER_ROOT --reference REFERENCE
+```
+
+Then inspect its `instruction.md`, `task.toml`, `README.md`, `environment/`, `solution/`, and `tests/` in that order. Read [references/frontier-standards.md](references/frontier-standards.md) before designing or validating tasks.
 
 Treat the selected bundled or explicitly supplied Frontier-Bench root as the source of truth when it conflicts with examples in the skill references. Do not browse for or copy other task-specific solutions.
 
