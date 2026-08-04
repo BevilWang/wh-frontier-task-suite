@@ -33,6 +33,19 @@ Treat the selected bundled or explicitly supplied Frontier-Bench root as the sou
 
 ## Design three original tasks
 
+Pick one design direction family for the selected reference before drafting
+concept cards, so repeated runs do not converge on the same ideas:
+
+```text
+python scripts/select_variant.py --reference REFERENCE --seed SEED
+```
+
+Use the same seed for the whole run and record seed + variant in the package
+README (init records both via `--seed` / `--variant`). If the user supplied a
+variant, use it. If a recent run of the same reference already used the sampled
+family, sample again or choose an unused family. Keep all three tasks inside
+the selected family's scope; do not drift into another family.
+
 Before writing files, draft three private concept cards with these fields:
 
 - real-world role and outcome;
@@ -57,8 +70,13 @@ Run:
 python scripts/submission_tool.py init OUTPUT_PARENT \
   --owner OWNER --contact CONTACT --category CATEGORY --subcategory SUBCATEGORY \
   --reference REFERENCE --reference-link REFERENCE_LINK --date YYYYMMDD \
+  --seed SEED --variant FAMILY_ID \
   --slug FIRST_SLUG --slug SECOND_SLUG --slug THIRD_SLUG
 ```
+
+Pass the seed and variant chosen above; `init` records them under `## Design
+provenance` in the package README and warns if the variant is not in the
+reference's pool (custom families are allowed but should be deliberate).
 
 Use lowercase **single-token** slugs (e.g. `replica`, `lease`, `index`). The bundled `check-task-slug.sh` counts the whole directory name, so the created directory `task-N-<slug>` must have at most three hyphen-separated tokens. The command creates `OWNER_submission/README.md` and exactly three `task-N-<slug>` directories. Replace every `TODO` and tailor every generated file; the skeleton is not a completed task.
 

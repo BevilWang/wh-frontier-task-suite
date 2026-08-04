@@ -37,10 +37,18 @@ Respect the host sandbox. Never disable it, request blanket bypasses, or redirec
 
 ## 1. Author without packaging
 
+Derive a fresh design seed for this run (e.g., from `RUN_ID` or a random value,
+unless the user supplied one) and record it in `pipeline-state.json`. Before
+spawning the author, sample the design direction family with the creator
+skill's `select_variant.py`; check prior runs of this reference under
+`WORKSPACE_ROOT/pipeline-runs/REFERENCE/` and avoid reusing a family from a
+recent run. Record the chosen seed and variant in `pipeline-state.json` and
+pass both through to the author.
+
 Spawn `frontier_author_RUN_ID` with raw input paths and:
 
 ```text
-Use $create-wh-frontier-tasks to create and validate the complete unpacked three-task submission. Write only under <AUTHOR_OUTPUT> and permitted disposable build locations. Complete all four author hardening sweeps and record exact evidence. Do not create a zip; packaging belongs only to the release stage.
+Use $create-wh-frontier-tasks to create and validate the complete unpacked three-task submission. Design seed: <SEED>. Design variant: <VARIANT>. Write only under <AUTHOR_OUTPUT> and permitted disposable build locations. Complete all four author hardening sweeps and record exact evidence. Do not create a zip; packaging belongs only to the release stage.
 ```
 
 Wait for completion. Run the creator validator, require zero errors, and resolve every warning or record concrete counter-evidence. Confirm the submission has exactly three tasks named `task-N-<single-token-slug>`. An author-created zip is stale-by-design and must never be treated as a release artifact.

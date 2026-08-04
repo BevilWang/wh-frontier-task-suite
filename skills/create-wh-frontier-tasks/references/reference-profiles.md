@@ -206,3 +206,35 @@ keep the difficulty class without copying the reference:
 5. **Prove determinism before authoring.** The oracle and verifier must fail and
    pass reproducibly on CPU without network or services; if you cannot reproduce
    the failure deterministically, redesign the fault, not the test.
+
+## Design direction pools
+
+Repeated runs of the same reference converge on the same ideas, so every run
+must pick one mutually distinct **design direction family** from the
+reference's pool and design all three tasks inside it. The machine-readable
+pools live in `references/design-pools.json`; sample deterministically:
+
+```text
+python scripts/select_variant.py --reference REFERENCE --seed SEED
+python scripts/select_variant.py --reference REFERENCE --variant FAMILY_ID
+```
+
+Record the seed and variant in the package README (`submission_tool.py init`
+does this via `--seed` / `--variant`). Do not reuse a family already used by a
+recent run of the same reference: list prior runs under
+`pipeline-runs/REFERENCE/` and pick an unused family (or a fresh seed) when the
+sampled one repeats.
+
+| Reference | Direction families (id) |
+| --- | --- |
+| `wal-recovery-ordering` | concurrent-visibility, merge-compaction, replication-catchup, recovery-index |
+| `ontology-kg-querying` | entity-reconciliation, temporal-conflict, lineage-materialization, schema-drift |
+| `rs-archive-clone` | protocol-reimplementation, error-correction-layers, streaming-transform, malformed-input-depth |
+| `lean-midpoint-proof` | axiom-ladder, dependent-lemmas, induction-hierarchy, order-theory |
+| `ks-solver-cpp` | coupled-equations, adaptive-mesh, boundary-forcing, long-time-stability |
+| `vllm-deepseek-streaming` | chunk-boundary, parser-state, cancellation-timeout, content-length-mismatch |
+| `biped-contact-dynamics` | hybrid-gait, contact-schedule, underactuated-balance, impact-transitions |
+
+Each family has a one-line direction in `design-pools.json` and is printed by
+the sampler. Choose the family before drafting concept cards and keep the
+concept cards, data, and verifier inside its scope.

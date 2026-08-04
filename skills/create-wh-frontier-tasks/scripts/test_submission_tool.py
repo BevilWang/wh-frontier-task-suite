@@ -166,6 +166,78 @@ class SubmissionToolTest(unittest.TestCase):
             with zipfile.ZipFile(archive_path) as archive:
                 names = archive.namelist()
             self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") for name in names))
+    def test_init_records_seed_and_variant(self) -> None:
+        with self.temporary_directory() as directory:
+            parent = Path(directory)
+            args = argparse.Namespace(
+                output_parent=str(parent),
+                owner="wh",
+                contact="wh",
+                category="Software",
+                subcategory="Databases",
+                reference="wal-recovery-ordering",
+                reference_link="local:ref",
+                date="20260802",
+                slug=["replica", "lease", "index"],
+                seed="abc123",
+                variant="recovery-index",
+            )
+            with contextlib.redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(submission_tool.cmd_init(args), 0)
+            readme = (parent / "wh_submission" / "README.md").read_text(encoding="utf-8")
+            self.assertIn("Design seed: abc123", readme)
+            self.assertIn("Design variant: recovery-index", readme)
+            self.assertIn("design_seed=abc123", stdout.getvalue())
+            self.assertIn("design_variant=recovery-index", stdout.getvalue())
+
+    def test_init_without_seed_samples_a_pool_variant(self) -> None:
+        with self.temporary_directory() as directory:
+            parent = Path(directory)
+            args = argparse.Namespace(
+                output_parent=str(parent),
+                owner="wh",
+                contact="wh",
+                category="Software",
+                subcategory="Databases",
+                reference="wal-recovery-ordering",
+                reference_link="local:ref",
+                date="20260802",
+                slug=["replica", "lease", "index"],
+                seed=None,
+                variant=None,
+            )
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(submission_tool.cmd_init(args), 0)
+            readme = (parent / "wh_submission" / "README.md").read_text(encoding="utf-8")
+            seed_line = next(line for line in readme.splitlines() if line.startswith("- Design seed: "))
+            variant_line = next(line for line in readme.splitlines() if line.startswith("- Design variant: "))
+            self.assertGreaterEqual(len(seed_line.split(": ", 1)[1]), 8)
+            pool_ids = {entry["id"] for entry in submission_tool.design_pools()["wal-recovery-ordering"]["pool"]}
+            self.assertIn(variant_line.split(": ", 1)[1], pool_ids)
+
+    def test_init_warns_on_custom_variant(self) -> None:
+        with self.temporary_directory() as directory:
+            parent = Path(directory)
+            args = argparse.Namespace(
+                output_parent=str(parent),
+                owner="wh",
+                contact="wh",
+                category="Software",
+                subcategory="Databases",
+                reference="wal-recovery-ordering",
+                reference_link="local:ref",
+                date="20260802",
+                slug=["replica", "lease", "index"],
+                seed="s",
+                variant="my-custom-family",
+            )
+            with contextlib.redirect_stdout(io.StringIO()):
+                with contextlib.redirect_stderr(io.StringIO()) as stderr:
+                    self.assertEqual(submission_tool.cmd_init(args), 0)
+            self.assertIn("WARNING", stderr.getvalue())
+            readme = (parent / "wh_submission" / "README.md").read_text(encoding="utf-8")
+            self.assertIn("Design variant: my-custom-family", readme)
+
 
 if __name__ == "__main__":
     unittest.main()

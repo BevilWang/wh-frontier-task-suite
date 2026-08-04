@@ -1,0 +1,142 @@
+{
+  "wal-recovery-ordering": {
+    "pool": [
+      {
+        "id": "concurrent-visibility",
+        "direction": "A storage engine whose concurrent reads and writes expose a durability-ordering bug; crash recovery must replay to an exact prefix without leaking later writes."
+      },
+      {
+        "id": "merge-compaction",
+        "direction": "A merge/compaction pipeline that corrupts record ordering when a crash lands mid-merge; recovery must resynchronize segment boundaries."
+      },
+      {
+        "id": "replication-catchup",
+        "direction": "A replication protocol where a lagging replica's recovery ordering diverges from the leader after a restart."
+      },
+      {
+        "id": "recovery-index",
+        "direction": "A post-crash index rebuild that silently drops durable entries unless replay ordering is exact."
+      }
+    ]
+  },
+  "ontology-kg-querying": {
+    "pool": [
+      {
+        "id": "entity-reconciliation",
+        "direction": "A knowledge graph where heterogeneous records about the same entity must be reconciled under strict identity rules, with hidden unseen bundles."
+      },
+      {
+        "id": "temporal-conflict",
+        "direction": "Temporal fact conflicts where the correct answer depends on effective-time resolution across overlapping sources."
+      },
+      {
+        "id": "lineage-materialization",
+        "direction": "Derived facts that must be materialized from rules and provenance, with queries that distinguish direct vs inferred knowledge."
+      },
+      {
+        "id": "schema-drift",
+        "direction": "Records arriving under drifting schemas that must be normalized into one model before querying."
+      }
+    ]
+  },
+  "rs-archive-clone": {
+    "pool": [
+      {
+        "id": "protocol-reimplementation",
+        "direction": "Clean-room behavioral reimplementation of a different layered binary protocol by black-box probing."
+      },
+      {
+        "id": "error-correction-layers",
+        "direction": "A tool with stacked error-correction layers where byte-level and failure-mode compatibility must be exact."
+      },
+      {
+        "id": "streaming-transform",
+        "direction": "A streaming transform tool whose chunk boundaries and malformed-input behavior are part of the observable contract."
+      },
+      {
+        "id": "malformed-input-depth",
+        "direction": "A parser/decoder that must match exact exit codes and byte layout across a deep matrix of malformed inputs."
+      }
+    ]
+  },
+  "lean-midpoint-proof": {
+    "pool": [
+      {
+        "id": "axiom-ladder",
+        "direction": "A formalization ladder built from sparse axioms where a meaningful lemma dependency graph must be preserved."
+      },
+      {
+        "id": "dependent-lemmas",
+        "direction": "A target theorem whose proof requires an exact chain of dependent lemmas and exact type checking."
+      },
+      {
+        "id": "induction-hierarchy",
+        "direction": "A proof requiring a carefully ordered induction hierarchy; the verifier bans unproved assumptions and weakened premises."
+      },
+      {
+        "id": "order-theory",
+        "direction": "A formal result in order theory where declaration and namespace preservation matter as much as the proof term."
+      }
+    ]
+  },
+  "ks-solver-cpp": {
+    "pool": [
+      {
+        "id": "coupled-equations",
+        "direction": "A high-accuracy nonlinear PDE solve on nontrivial geometry with oracle-only forcing and boundary information."
+      },
+      {
+        "id": "adaptive-mesh",
+        "direction": "A solver that must adapt numerical resolution to reach a strict hidden error tolerance without fixed tables."
+      },
+      {
+        "id": "boundary-forcing",
+        "direction": "A physics model whose hidden boundary/forcing regimes are only partially observable at solve time."
+      },
+      {
+        "id": "long-time-stability",
+        "direction": "A long-time integration where conservation/residual checks reject visually plausible but unstable outputs."
+      }
+    ]
+  },
+  "vllm-deepseek-streaming": {
+    "pool": [
+      {
+        "id": "chunk-boundary",
+        "direction": "A streaming server whose chunk boundaries corrupt messages; verifier tests mis-segmentation and duplicated/dropped delimiters."
+      },
+      {
+        "id": "parser-state",
+        "direction": "An incremental parser whose state is not reset between turns, leaking tokens across requests."
+      },
+      {
+        "id": "cancellation-timeout",
+        "direction": "A serving stack where cancellation or timeout leaves a half-written buffer that corrupts the next response."
+      },
+      {
+        "id": "content-length-mismatch",
+        "direction": "A protocol layer where content-length vs chunked framing disagree, breaking downstream JSON parsing."
+      }
+    ]
+  },
+  "biped-contact-dynamics": {
+    "pool": [
+      {
+        "id": "hybrid-gait",
+        "direction": "Hybrid-mode trajectory generation for a different motion family with hidden configurations and mode schedules."
+      },
+      {
+        "id": "contact-schedule",
+        "direction": "A control outcome whose contact creation/release schedule must satisfy first-principles dynamics checks."
+      },
+      {
+        "id": "underactuated-balance",
+        "direction": "An underactuated balancing task where endpoint and smoothness constraints reject visually plausible fakes."
+      },
+      {
+        "id": "impact-transitions",
+        "direction": "A task centered on impact/transition handling where torque, friction, and collision constraints are verified from physics."
+      }
+    ]
+  }
+}
