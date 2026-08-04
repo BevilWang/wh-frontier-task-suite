@@ -1,153 +1,157 @@
 # WH Frontier Task Suite
 
-A Codex plugin for authoring, hardening, independently reviewing, repairing, and releasing three original Frontier-Bench/Harbor tasks from one bundled reference.
+一个用于**创作、加固、独立评审、修复并发布**三道原创 Frontier-Bench/Harbor 任务的 Codex 插件，以内置的一道参考题为校准基准。
 
-## What it does
+## 它能做什么
 
-The plugin turns a single reference task into a complete three-task submission:
+插件把单个参考题转化为一份完整的三题提交包：
 
-- **Author** an original objective, agent environment, oracle solution, verifier, and metadata for each task.
-- **Harden** the submission with contract, input-domain, adversarial, and runtime sweeps before review.
-- **Review** with a fresh independent AI plus deterministic oracle, nop, and static checks.
-- **Repair** from validated findings and re-review until the submission passes.
-- **Release** an immutable archive whose fingerprint matches the passing review.
+- **创作（Author）**：为每道任务生成原创目标、Agent 环境、oracle 参考解、验证器与元数据。
+- **加固（Harden）**：在评审前完成契约、输入域、对抗与运行时四轮扫描。
+- **评审（Review）**：由全新独立 AI 执行确定性 oracle、nop 与静态检查。
+- **修复（Repair）**：依据有效发现修复并重新评审，直到通过。
+- **发布（Release）**：只发布与通过评审的源码指纹完全一致的不可变压缩包。
 
-The plugin bundles the reference tasks, validation scripts, and review tooling, so no separate Frontier-Bench checkout is required.
+插件内置参考任务、校验脚本与评审工具，无需另外克隆 Frontier-Bench 仓库。
 
-## Supported references
+## 支持的参考题
 
-| Category | Reference |
+| 方向 | 参考题 |
 | --- | --- |
-| Software / Databases | `wal-recovery-ordering` |
-| Software / Data Engineering | `ontology-kg-querying` |
-| Software / Algorithms | `rs-archive-clone` |
-| Science / Math | `lean-midpoint-proof` |
-| Science / Physics | `ks-solver-cpp` |
-| ML / Inference | `vllm-deepseek-streaming` |
-| Science / Robotics | `biped-contact-dynamics` |
+| 软件 / 数据库 | `wal-recovery-ordering` |
+| 软件 / 数据工程 | `ontology-kg-querying` |
+| 软件 / 算法 | `rs-archive-clone` |
+| 科学 / 数学 | `lean-midpoint-proof` |
+| 科学 / 物理 | `ks-solver-cpp` |
+| 机器学习 / 推理 | `vllm-deepseek-streaming` |
+| 科学 / 机器人 | `biped-contact-dynamics` |
 
-## Installation
+## 安装
 
 ### Codex app
 
-1. Open this repository in the Codex app.
-2. Restart Codex so it loads `.agents/plugins/marketplace.json`.
-3. Go to **Plugins**, find **WH Frontier Task Suite**, and install it.
+1. 在 Codex 应用中打开本仓库。
+2. 重启 Codex，使其加载 `.agents/plugins/marketplace.json`。
+3. 打开 **Plugins**，找到 **WH Frontier Task Suite** 并安装。
 
 ### Codex CLI
 
-Add the repository as a marketplace and install the plugin:
+添加仓库为市场并安装插件：
 
 ```bash
 codex plugin marketplace add .
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-Or install from the remote URL after pushing:
+或推送后在远端安装：
 
 ```bash
 codex plugin marketplace add https://github.com/BevilWang/wh-frontier-task-suite
 codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 ```
 
-Run `codex plugin marketplace list` to confirm the marketplace name if it differs.
+如果市场名不同，用 `codex plugin marketplace list` 确认。
 
-See [docs/app-install.md](docs/app-install.md) for the full guide and a post-install verification checklist.
+完整指引与安装后验证清单见 [docs/app-install.md](docs/app-install.md)。
 
-## Skills
+## 技能
 
-After installation, start a new Codex task and invoke any of the four skills:
+安装后新开一个 Codex 任务，调用以下四个技能：
 
-| Skill | Use when you want to ... |
+| 技能 | 适用场景 |
 | --- | --- |
-| `$run-wh-frontier-pipeline` | Run the complete lifecycle from authoring through release. |
-| `$create-wh-frontier-tasks` | Create or validate a three-task submission on its own. |
-| `$verify-wh-frontier-tasks` | Audit an existing three-task submission independently. |
-| `$repair-wh-frontier-tasks` | Fix findings from an independent review and prepare for re-review. |
+| `$run-wh-frontier-pipeline` | 跑完整生命周期：从创作到发布。 |
+| `$create-wh-frontier-tasks` | 单独创建或校验三题提交包。 |
+| `$verify-wh-frontier-tasks` | 独立审计已有三题提交包。 |
+| `$repair-wh-frontier-tasks` | 依据独立评审发现修复并准备复审。 |
 
-## Quick start
+## 快速开始
 
 ```text
-Use $run-wh-frontier-pipeline.
+使用 $run-wh-frontier-pipeline。
 
-Reference: wal-recovery-ordering
-Workspace root: E:\path\to\writable-workspace
-Owner: Your Name
-Contact: name@example.com
-Submission date: 20260805
+参考题：wal-recovery-ordering
+工作目录：E:\path\to\writable-workspace
+提交人：Your Name
+联系方式：name@example.com
+提交日期：20260805
 ```
 
-By default the pipeline repairs and re-reviews up to 5 rounds. Add `Maximum repair rounds: N` to cap it.
+默认管线最多修复并复审 5 轮；如需上限，添加 `Maximum repair rounds: N`。
 
-## Requirements
+## 运行要求
 
-- Codex app or Codex CLI
+- Codex app 或 Codex CLI
 - Python 3.12+
-- Docker Desktop with the daemon running
-- Harbor CLI (`python -m uv tool install harbor`)
-- A writable workspace directory
+- Docker Desktop 且 daemon 处于运行状态
+- Harbor CLI（`python -m uv tool install harbor`）
+- 一个可写的工作目录
 
-On Windows, set UTF-8 variables and restart Codex:
+Windows 下先设置 UTF-8 变量并重启 Codex：
 
 ```powershell
 setx PYTHONUTF8 1
 setx PYTHONIOENCODING utf-8
 ```
 
-## Development
+## 参考题可运行性
 
-The repository is fully self-testing with only the Python standard library:
-
-```powershell
-python scripts/run_all_tests.py                                # all unit tests
-python scripts/validate_plugin_release.py                      # manifest + marketplace + repo hygiene
-python scripts/validate_windows_paths.py                       # Windows-safe path budget
-python skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py fb  # bundled references
-```
-
-GitHub Actions runs all four on every push and pull request (Windows and Ubuntu).
-
-## Reference runnability
-
-Each of the seven bundled references has a profiled build/run footprint so you
-can pick one your hardware can actually validate. Get the live profile with:
+七道内置参考题各自有可运行性画像，帮助你选择当前硬件能真正构建并验证的参考题：
 
 ```text
 python skills/create-wh-frontier-tasks/scripts/runnability_report.py fb --reference REFERENCE
 ```
 
-Highlights:
+要点：
 
-- All seven validate on **CPU**; none needs a GPU or model weights.
-- Every image requires network at build time. `lean-midpoint-proof` also
-  downloads the Lean toolchain, `biped-contact-dynamics` installs the large
-  drake wheel, and `vllm-deepseek-streaming` pulls a multi-GB vLLM CPU image.
-- `ks-solver-cpp` is the only reference that is not self-contained: its
-  verifier wheels are excluded from the snapshot by design. Authoring never
-  needs them; to execute that reference for calibration, restore first:
-  `python scripts/restore_ks_wheels.py` (see [fb/PROVENANCE.md](fb/PROVENANCE.md)).
-- Full feasibility table and per-category authoring guidance:
-  [reference-profiles.md](skills/create-wh-frontier-tasks/references/reference-profiles.md).
+- 七道题都可在 **CPU** 上验证，无需 GPU 或模型权重。
+- 每道题的镜像构建都需要网络。`lean-midpoint-proof` 还会下载 Lean 工具链，`biped-contact-dynamics` 会安装较大的 drake 依赖，`vllm-deepseek-streaming` 会拉取数 GB 的 vLLM CPU 镜像。
+- `ks-solver-cpp` 是唯一不自包含的参考题：其 verifier wheels 按设计从快照中排除。创作新题不需要它们；如需运行该参考题做校准，先还原：`python scripts/restore_ks_wheels.py`（详见 [fb/PROVENANCE.md](fb/PROVENANCE.md)）。
+- 完整可行性表与逐类创作指南：[reference-profiles.md](skills/create-wh-frontier-tasks/references/reference-profiles.md)。
 
-## Repository layout
+## 设计多样性
+
+同一参考题多次运行容易收敛到相似的选题。为避免重复，每次运行都从参考题的**设计方向族池**中采样一个方向族，并在该方向族内创作：
+
+```text
+python skills/create-wh-frontier-tasks/scripts/select_variant.py --reference REFERENCE --seed SEED
+python skills/create-wh-frontier-tasks/scripts/select_variant.py --reference REFERENCE --variant FAMILY_ID
+```
+
+`submission_tool.py init --seed/--variant` 会把种子与方向族写入包 README 的 `## Design provenance`。方向族定义见 `references/design-pools.json`。
+
+## 开发与测试
+
+仓库仅依赖 Python 标准库即可自测：
+
+```powershell
+python scripts/run_all_tests.py                                # 全部单元测试
+python scripts/validate_plugin_release.py                      # 清单 + 市场 + 仓库卫生
+python scripts/validate_windows_paths.py                       # Windows 路径预算
+python skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py fb  # 内置参考题
+```
+
+GitHub Actions 会在每次 push / pull request 时于 Windows 与 Ubuntu 上运行以上全部检查。
+
+## 仓库结构
 
 ```text
 .
-├── .codex-plugin/plugin.json   # plugin manifest
-├── .agents/plugins/marketplace.json  # Codex app marketplace entry
-├── .github/workflows/ci.yml    # Windows + Ubuntu CI matrix
-├── .gitattributes              # LF line endings for scripts and config
-├── skills/                     # four Codex skills
-├── fb/                         # bundled Frontier-Bench snapshot
-├── docs/                       # installation and usage docs
-├── scripts/                    # repository validation helpers
-├── LICENSE                     # MIT license for this project
-├── README.md                   # this file
-└── THIRD_PARTY_NOTICES.md      # third-party attribution
+├── .codex-plugin/plugin.json   # 插件清单
+├── .agents/plugins/marketplace.json  # Codex app 市场条目
+├── .github/workflows/ci.yml    # Windows + Ubuntu CI 矩阵
+├── .gitattributes              # 脚本与配置统一 LF 行尾
+├── skills/                     # 四个 Codex 技能
+├── fb/                         # 内置 Frontier-Bench 快照
+├── docs/                       # 安装与使用文档
+├── scripts/                    # 仓库校验辅助脚本
+├── LICENSE                     # 本项目 MIT 许可证
+├── README.md                   # 本文件
+└── THIRD_PARTY_NOTICES.md      # 第三方声明
 ```
 
-## License and provenance
+## 许可证与出处
 
-This project (plugin code, skills, and tooling) is licensed under the [MIT License](LICENSE).
+本项目（插件代码、技能与工具）采用 [MIT License](LICENSE)。
 
-The built-in reference materials come from [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench) and are distributed under the Apache License 2.0. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [fb/PROVENANCE.md](fb/PROVENANCE.md) for details.
+内置参考材料来自 [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench)，按 Apache License 2.0 分发。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与 [fb/PROVENANCE.md](fb/PROVENANCE.md)。
