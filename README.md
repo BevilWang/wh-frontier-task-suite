@@ -107,6 +107,28 @@ python skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py fb  
 
 GitHub Actions runs all four on every push and pull request (Windows and Ubuntu).
 
+## Reference runnability
+
+Each of the seven bundled references has a profiled build/run footprint so you
+can pick one your hardware can actually validate. Get the live profile with:
+
+```text
+python skills/create-wh-frontier-tasks/scripts/runnability_report.py fb --reference REFERENCE
+```
+
+Highlights:
+
+- All seven validate on **CPU**; none needs a GPU or model weights.
+- Every image requires network at build time. `lean-midpoint-proof` also
+  downloads the Lean toolchain, `biped-contact-dynamics` installs the large
+  drake wheel, and `vllm-deepseek-streaming` pulls a multi-GB vLLM CPU image.
+- `ks-solver-cpp` is the only reference that is not self-contained: its
+  verifier wheels are excluded from the snapshot by design. Authoring never
+  needs them; to execute that reference for calibration, restore first:
+  `python scripts/restore_ks_wheels.py` (see [fb/PROVENANCE.md](fb/PROVENANCE.md)).
+- Full feasibility table and per-category authoring guidance:
+  [reference-profiles.md](skills/create-wh-frontier-tasks/references/reference-profiles.md).
+
 ## Repository layout
 
 ```text

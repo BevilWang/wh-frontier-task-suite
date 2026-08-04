@@ -33,6 +33,9 @@ jobs:
       - name: Validate all bundled references resolve
         run: python skills/create-wh-frontier-tasks/scripts/validate_reference_bundle.py fb
 
+      - name: Report reference runnability profiles
+        run: python skills/create-wh-frontier-tasks/scripts/runnability_report.py fb --json
+
       - name: Validate Windows-safe repository paths
         run: python scripts/validate_windows_paths.py
 

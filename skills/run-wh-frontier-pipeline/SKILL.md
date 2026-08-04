@@ -12,6 +12,14 @@ Coordinate an evidence-gated author-hardening-review-repair-release workflow. Pr
 Require a supported reference, writable workspace root, owner, contact, and real submission date. If the user does not supply a maximum repair-round count, default to a safety cap of **5 repair rounds**. Stop with `BLOCKED` when that cap is reached and tell the user exactly how to resume with a higher cap. When a cap is supplied, keep repairing and independently re-reviewing until a validated `PASS` or a genuine external blocker.
  Resolve the bundled Frontier-Bench root as `../../fb`; validate it with the creator skill's `validate_reference_bundle.py --reference ... --json` and use its returned semantic paths.
 
+Before authoring, run the creator skill's runnability report for the chosen reference and relay the profile to the user:
+
+```text
+python skills/create-wh-frontier-tasks/scripts/runnability_report.py BUNDLED_FRONTIER_ROOT --reference REFERENCE
+```
+
+Surface image size, build-time network needs, compute class, and the validation wall-clock estimate. Warn when the reference is heavy (`biped-contact-dynamics`, `vllm-deepseek-streaming`) or needs network at build (`lean-midpoint-proof`, `biped-contact-dynamics`, `vllm-deepseek-streaming`). For `ks-solver-cpp`, note that the upstream reference verifier needs restored wheels only if the user wants to execute that reference for calibration; authoring new tasks does not require it. Record the profile in `pipeline-state.json`.
+
 Create `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` and use the last directory as `RUN_ID`. Keep author output, hardening evidence, reviews, repairs, release artifacts, and `pipeline-state.json` there. Record every spawned agent, stage transition, fingerprint, verdict, repair count, command outcome, blocker, and release artifact. Never store hidden answers in state.
 
 Read [references/orchestration-protocol.md](references/orchestration-protocol.md) before spawning. Require collaboration tools and use `fork_turns="none"` for every stage agent.

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -31,6 +32,21 @@ TASK_ENTRIES = (
     "tests",
 )
 
+DOCKERFILES = ("environment/Dockerfile", "tests/Dockerfile")
+
+# Local COPY/ADD sources referenced by a Dockerfile may be missing from the
+# snapshot only when documented as an intentional exclusion in fb/PROVENANCE.md.
+# Relative to each Dockerfile's build context (its own directory).
+ALLOWED_MISSING_CONTEXT = frozenset()
+
+COPY_SOURCE_RE = re.compile(
+    r"^\s*(?:COPY|ADD)"
+    r"(?:\s+--[a-z0-9-]+(?:=[^\s]+)?)*"
+    r"(?:\s+--from=[^\s]+)*"
+    r"\s+(?P<sources>.+?)\s+[^\s]+\s*$",
+    re.IGNORECASE,
+)
+
 
 def is_short_layout(root: Path) -> bool:
     return (root / "t").is_dir()
@@ -55,6 +71,52 @@ def bundle_paths(root: Path, reference: str | None = None) -> dict[str, Path]:
         task_dir = TASK_PATHS[reference] if short else reference
         paths["task"] = paths["tasks"] / task_dir
     return paths
+
+
+def dockerfile_local_sources(dockerfile: Path) -> list[str]:
+    """Return local (non-remote, non-absolute) COPY/ADD sources in a Dockerfile."""
+    sources: list[str] = []
+    logical = ""
+    for raw in dockerfile.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.rstrip()
+        logical += line
+        if line.endswith("\\") or (not logical.strip() and not line.strip()):
+            if line.endswith("\\"):
+                logical = logical[:-1]
+                continue
+            logical = ""
+            continue
+        match = COPY_SOURCE_RE.match(logical)
+        logical = ""
+        if not match:
+            continue
+        for source in match.group("sources").split():
+            if source.startswith(("http://", "https://", "--from=", "/")):
+                continue
+            sources.append(source)
+    return sources
+
+
+def dockerfile_integrity_errors(task_dir: Path) -> list[str]:
+    """Error when a Dockerfile COPY/ADD source is missing from its context."""
+    errors: list[str] = []
+    for dockerfile_name in DOCKERFILES:
+        dockerfile = task_dir / dockerfile_name
+        if not dockerfile.is_file():
+            continue
+        for source in dockerfile_local_sources(dockerfile):
+            context_probe = dockerfile.parent / source
+            if any(character in source for character in "*?["):
+                context_probe = (
+                    context_probe.parent if context_probe.name else context_probe
+                )
+            key = f"{task_dir.name}:{dockerfile_name}:{source}"
+            if not context_probe.exists() and key not in ALLOWED_MISSING_CONTEXT:
+                errors.append(
+                    f"{task_dir.name}: {dockerfile_name} COPY/ADD source missing "
+                    f"from snapshot: {source}"
+                )
+    return errors
 
 
 def validate(root: Path) -> list[str]:
@@ -85,6 +147,7 @@ def validate(root: Path) -> list[str]:
         for relative in TASK_ENTRIES:
             if not (path / relative).exists():
                 errors.append(f"{task}: missing {relative}")
+        errors.extend(dockerfile_integrity_errors(path))
 
     excluded_wheels = bundle_paths(root, "ks-solver-cpp")["task"] / "tests" / "wheels"
     if excluded_wheels.exists():
