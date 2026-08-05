@@ -56,10 +56,11 @@ Run, when locally available:
 
 ```text
 for check in checks/check-*.sh; do bash "$check" TASK_PATH; done
-harbor check TASK_PATH -r FRONTIER_BENCH/rubrics/task-implementation.toml
 harbor run -p TASK_PATH --agent oracle
 harbor run -p TASK_PATH --agent nop
 ```
+
+The official `harbor check` (rubric contract check) is an external step performed by the Harbor platform; this plugin does not run it locally (see the plugin README). Local evidence comes from the bundled static checks plus oracle/nop runs.
 
 Run oracle at least five times for concurrent, nondeterministic, numerical, or timing-sensitive tasks. Capture exact commands, exit codes, rewards, run counts, and log paths. Never infer a pass from source inspection.
 

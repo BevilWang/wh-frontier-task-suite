@@ -71,10 +71,11 @@ For every repaired task, run:
 
 ```text
 for check in checks/check-*.sh; do bash "$check" TASK_PATH; done
-harbor check TASK_PATH -r FRONTIER_BENCH/rubrics/task-implementation.toml
 harbor run -p TASK_PATH --agent oracle
 harbor run -p TASK_PATH --agent nop
 ```
+
+The official `harbor check` is an external step performed by the Harbor platform; this plugin does not run it locally (see the plugin README). The local regression gate uses the bundled static checks plus oracle/nop runs.
 
 Require oracle reward `1` and nop reward `0`. Repeat oracle at least five times for concurrent, nondeterministic, numerical, or timing-sensitive tasks. Re-run the creator skill's structural validator and inspect the final agent-visible image for leakage.
 

@@ -61,10 +61,11 @@ Run from the Frontier-Bench root, adapting the task path:
 
 ```bash
 for check in checks/check-*.sh; do bash "$check" tasks/your-task; done
-harbor check tasks/your-task -r rubrics/task-implementation.toml
 harbor run -p tasks/your-task --agent oracle
 harbor run -p tasks/your-task --agent nop
 ```
+
+The official `harbor check` (rubric contract check) is run externally by the Harbor platform after submission; this plugin does not implement it locally (see the plugin README). Local validation uses the bundled static checks plus oracle/nop runs.
 
 For a new submission outside `tasks/`, either copy each task into a disposable checkout location or pass its path if the installed Harbor version supports it. Do not mutate or overwrite an existing benchmark task.
 

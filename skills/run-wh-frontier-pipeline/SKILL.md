@@ -1,16 +1,17 @@
 ---
 name: run-wh-frontier-pipeline
-description: Orchestrate the complete Frontier-Bench task lifecycle inside one Codex task by spawning isolated author, hardener, reviewer, repair, re-review, and release subagents against the plugin's bundled references. Use when the user wants three original tasks carried through exhaustive independent review, evidence-backed repair, and immutable release; when coordinating create-wh-frontier-tasks, verify-wh-frontier-tasks, and repair-wh-frontier-tasks; or when resuming a saved pipeline run.
+description: Orchestrate the complete Frontier-Bench task lifecycle inside one Codex task by spawning isolated author, hardener, reviewer, repair, re-review, and release subagents against the plugin's bundled references. The pipeline runs an internal review loop (r1, r2, ...) until an internal PASS and then releases an immutable archive; Harbor's official check is an external step documented in the plugin README and is not implemented locally. Use when the user wants three original tasks carried through the internal review loop with evidence-backed repair and immutable release; when coordinating create-wh-frontier-tasks, verify-wh-frontier-tasks, and repair-wh-frontier-tasks; or when resuming a saved pipeline run.
 ---
 
 # Run WH Frontier Pipeline
 
-Coordinate an evidence-gated author-hardening-review-repair-release workflow. Preserve reviewer independence, keep one writer at a time, and treat validated disk artifacts as authoritative.
+Coordinate an evidence-gated author-hardening-review-repair-release workflow. The review phase is an **internal review loop** (rounds `r1`, `r2`, ...) that ends only at an internal `PASS`; handing the release to Harbor's official check is a separate external step documented in the plugin README, not implemented here. Preserve reviewer independence, keep one writer at a time, and treat validated disk artifacts as authoritative.
 
 ## Resolve inputs and run root
 
-Require a supported reference, writable workspace root, owner, contact, and real submission date. If the user does not supply a maximum repair-round count, default to a safety cap of **5 repair rounds**. Stop with `BLOCKED` when that cap is reached and tell the user exactly how to resume with a higher cap. When a cap is supplied, keep repairing and independently re-reviewing until a validated `PASS` or a genuine external blocker.
- Resolve the bundled Frontier-Bench root as `../../fb`; validate it with the creator skill's `validate_reference_bundle.py --reference ... --json` and use its returned semantic paths.
+Require a supported reference, writable workspace root, owner, contact, and real submission date. If the user does not supply a maximum repair-round count, default to a safety cap of **5 repair rounds**. Stop with `BLOCKED` when that cap is reached and tell the user exactly how to resume with a higher cap. When a cap is supplied, keep repairing and independently re-reviewing until an internal `PASS` or a genuine external blocker.
+
+Resolve the bundled Frontier-Bench root as `../../fb`; validate it with the creator skill's `validate_reference_bundle.py --reference ... --json` and use its returned semantic paths.
 
 Before authoring, run the creator skill's runnability report for the chosen reference and relay the profile to the user:
 
@@ -29,7 +30,7 @@ Read [references/orchestration-protocol.md](references/orchestration-protocol.md
 Before authoring and again before every stage that needs execution:
 
 1. On Windows set `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8` for Harbor commands.
-2. Require `harbor --version` and `docker version` to succeed. If Docker is installed but stopped, request only the approval needed to start Docker Desktop, then retry. Do not spend a review or repair round on an infrastructure-only failure that can be corrected first.
+2. Require `harbor --version` and `docker version` to succeed. Harbor is used only as the local runtime harness for oracle/nop evidence; the official `harbor check` is external and is not run by this pipeline. If Docker is installed but stopped, request only the approval needed to start Docker Desktop, then retry. Do not spend a review or repair round on an infrastructure-only failure that can be corrected first.
 3. Record available Bash/static-check support. On Windows long-path failures, use a disposable short root containing short task aliases, a copied rubric, and an explicit short `--jobs-dir`; optionally map that root with `subst`. Keep the reviewed submission immutable and remove only the disposable mapping afterward.
 4. If required infrastructure remains unavailable, record `PROVISIONAL` evidence and stop unless the user supplies the missing authority or service.
 
@@ -56,47 +57,51 @@ Wait for completion. Run the creator validator, require zero errors, and resolve
 
 ## 2. Fresh pre-review hardening
 
-Before the counted independent review, spawn a new writer `frontier_hardener_RUN_ID`. Pass the raw submission, raw reference, standards, the selected profile's reference-specific hardening checklist, and a hardening output directory, but no author reasoning. Instruct it to use `$create-wh-frontier-tasks` for a full adversarial author gate: contract-test matrices, input/domain totality and accepted-state tracing, generated/hidden verifier depth, exact unprivileged CTRF/reward execution, oracle/nop, leakage, and shortcut probes. It may fix defects and must leave evidence under the hardening directory; it must not package.
+Before the counted internal review, spawn a new writer `frontier_hardener_RUN_ID`. Pass the raw submission, raw reference, standards, the selected profile's reference-specific hardening checklist, and a hardening output directory, but no author reasoning. Instruct it to use `$create-wh-frontier-tasks` for a full adversarial author gate: contract-test matrices, input/domain totality and accepted-state tracing, generated/hidden verifier depth, exact unprivileged CTRF/reward execution, oracle/nop, leakage, and shortcut probes. It may fix defects and must leave evidence under the hardening directory; it must not package.
 
 Wait, rerun the structural validator **and every bundled static check that can execute on the host**, fingerprint the hardened submission, and update state. If the hardener cannot produce a structurally valid submission, do not consume a review round; return to author or stop. This stage is not an independent verdict and does not consume a repair round. Its purpose is to remove preventable author defects before reviewer budget begins.
 
 
-## 3. Exhaustive independent review
+## 3. Internal review loop: round r1
+
+The review loop is internal to the plugin: it combines a fresh independent AI review with deterministic oracle, nop, and bundled static checks. The official `harbor check` is not part of this loop; after an internal `PASS` the package is handed to Harbor's official check separately (external, documented in the plugin README).
 
 Spawn `frontier_review_RUN_ID_r1` as a coordinator-invoked isolated reviewer. Pass only the raw hardened submission, raw reference, resolved Frontier-Bench root, evidence path, and review output. Require `$verify-wh-frontier-tasks` schema-2 output and explicitly require the reviewer to continue after the first blocker and finish all four source sweeps for all three tasks.
 
 Wait for `evidence.json`, `review.json`, `review.md`, and the post-review fingerprint. Validate the report and source immutability with the verifier scripts. Read the verdict from the validated JSON, never from prose.
 
-## 4. Decide
+## 4. Decide the internal verdict
 
-- `PASS`: proceed to release.
-- `FAIL`: repair if the repair budget remains.
-- `PROVISIONAL`: retry only missing checks after re-running runtime preflight. If infrastructure or authority remains unavailable, stop precisely; never convert it to `PASS`.
+- internal `PASS`: proceed to release.
+- `FAIL`: repair if the repair budget remains, then start the next round.
+- `PROVISIONAL`: retry only missing checks after re-running runtime preflight. If infrastructure or authority remains unavailable, stop precisely; never convert it to internal `PASS`.
 - Invalid/missing report: follow up once with the same reviewer. Stop if it remains invalid.
 
-## 5. Repair with full hardening halo
+## 5. Repair for the next internal round
 
 For repair round `N`, spawn `frontier_repair_RUN_ID_rN` with the submission, validated authoritative review, matching evidence, reference paths, and repair directory. Identify it as a coordinator-invoked isolated repairer. Require `$repair-wh-frontier-tasks` schema-2 output, root-cause fixes, and all four hardening sweeps for every task, including tasks not named in the finding.
 
 Wait for a valid `repair-ledger.json`, `repair.md`, and new fingerprint. Validate the ledger. Do not accept prose or a targeted regression alone; the ledger must preserve imported items and record contract matrix, input/domain totality, adversarial verifier, repair halo, static, oracle, and nop evidence, including the selected profile's reference-specific risks.
 
-## 6. Fresh re-review and closure
+## 6. Fresh re-review: round rN+1 and closure
 
 Spawn `frontier_review_RUN_ID_rN+1` with only the corrected raw submission, raw reference, root, and new `from-scratch/` directory. Do not disclose previous verdicts, findings, ledger, rationale, or desired outcome. Require a complete schema-2 from-scratch report and validate it before revealing prior-cycle artifacts.
 
 Then use `followup_task` on the same reviewer with the previous review and validated repair ledger. Require closure/regression verification without erasing the recorded from-scratch assessment; write the authoritative report under `closure/`. Validate the closure report and immutability. Use only the closure verdict.
 
-Loop through repair and re-review until `PASS` or until the repair cap is reached. Track the fingerprint of open blocker/major findings; if the same blocker recurs in two consecutive repair rounds without new evidence of progress, stop with `BLOCKED` to prevent endless oscillation. Stop only for a genuine external blocker, repeated invalid stage artifacts after the defined retry, an explicit user-supplied repair cap being exhausted, or repeated finding fingerprints. If an explicit cap is exhausted, mark `BLOCKED`, preserve the latest narrow findings, and state exactly how to resume after raising or removing that cap. Never release a stale author zip.
+Loop through repair and re-review until an internal `PASS` or until the repair cap is reached. Track the fingerprint of open blocker/major findings; if the same blocker recurs in two consecutive repair rounds without new evidence of progress, stop with `BLOCKED` to prevent endless oscillation. Stop only for a genuine external blocker, repeated invalid stage artifacts after the defined retry, an explicit user-supplied repair cap being exhausted, or repeated finding fingerprints. If an explicit cap is exhausted, mark `BLOCKED`, preserve the latest narrow findings, and state exactly how to resume after raising or removing that cap. Never release a stale author zip.
 
 
 ## 7. Immutable release
 
-After a validated fresh `PASS`, require the live fingerprint to equal the passing review fingerprint. Create an immutable snapshot or disposable bit-identical copy. All content changes must precede the passing review.
+After a validated internal `PASS`, require the live fingerprint to equal the passing review fingerprint. Create an immutable snapshot or disposable bit-identical copy. All content changes must precede the passing review.
 
 Spawn `frontier_release_RUN_ID` with only the reviewed snapshot, passing review, Frontier-Bench root, and release directory. Instruct it to use `$create-wh-frontier-tasks` only for read-only final validation, bit-for-bit packaging, checksum, clean extraction, fingerprint comparison, and smoke testing. It must not edit, clean, rename, or update reviewed content.
 
 Require the archive, extracted submission, and passing review fingerprints to match. If release discovers a required content change, return to repair plus fresh review. Update `pipeline-state.json` after every terminal stage and include every agent actually spawned.
 
+The pipeline ends after immutable release. Handing the package to Harbor's official check is a separate external step; see the plugin README for how to submit it. Do not run `harbor check` locally as a pipeline gate.
+
 ## Report
 
-Return the reference and run root; runtime preflight; every agent/stage; every verdict and repair round; commands and observed evidence; final archive/checksum/fingerprint when released; and unresolved blockers or resume instructions. Claim completion only after fresh `PASS` and successful immutable release.
+Return the reference and run root; runtime preflight; every agent/stage; every verdict and repair round; commands and observed evidence; final archive/checksum/fingerprint when released; and unresolved blockers or resume instructions. Claim completion only after an internal `PASS` and successful immutable release.

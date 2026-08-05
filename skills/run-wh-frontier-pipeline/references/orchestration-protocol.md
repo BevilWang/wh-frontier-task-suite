@@ -6,8 +6,9 @@
 2. Keep review judgment independent from authoring and repair context.
 3. Use deterministic files and validators as the stage interface.
 4. Prevent concurrent writes to the same submission.
-5. Remove preventable author defects before the counted independent-review loop.
-6. Default to repair-until-PASS; stop safely only on missing authority, persistent invalid evidence, or an explicit user safety cap.
+5. Remove preventable author defects before the counted internal review loop.
+6. Default to an internal review loop (r1, r2, ...) until internal `PASS`; stop safely only on missing authority, persistent invalid evidence, or an explicit user safety cap.
+7. Keep Harbor's official check external: the local pipeline ends at internal `PASS` plus immutable release; the official `harbor check` is documented in the plugin README and is not implemented locally.
 
 ## Context boundaries
 
@@ -35,6 +36,8 @@
 | Repair | schema-2 `repair-ledger.json`, `repair.md`, hardening matrix, corrected source fingerprint |
 | Release | final zip, checksum, archive inventory, extracted smoke-test evidence |
 
+The review verdict is the plugin's **internal** gate. The official `harbor check` runs externally after release and is not part of the local stage contract.
+
 ## State machine
 
 Persist `repair_policy` in `pipeline-state.json`. The default is `{"mode":"until_pass","maximum_rounds":5}`. If the user explicitly supplies a cap, store `mode` as `capped` and the positive integer in `maximum_rounds`; never silently invent or lower a cap during resume.
@@ -42,9 +45,9 @@ Persist `repair_policy` in `pipeline-state.json`. The default is `{"mode":"until
 ```text
 AUTHORING
   -> HARDENING
-  -> REVIEWING
-  -> PASS -> RELEASING -> COMPLETE
-  -> FAIL -> REPAIRING -> REVIEWING
+  -> INTERNAL_REVIEW (r1)
+  -> INTERNAL_PASS -> RELEASING -> COMPLETE
+  -> FAIL -> REPAIRING (rN) -> INTERNAL_REVIEW (rN+1)
   -> PROVISIONAL -> RETRY_MISSING_CHECKS or BLOCKED
   -> INVALID_REPORT -> ONE_REVIEWER_RETRY or BLOCKED
   -> EXPLICIT_REPAIR_CAP_EXHAUSTED -> BLOCKED
@@ -52,7 +55,7 @@ AUTHORING
 
 ## Agent lifecycle
 
-1. Use run-scoped stage names such as `frontier_author_RUN_ID`, `frontier_hardener_RUN_ID`, `frontier_review_RUN_ID_r1`, `frontier_repair_RUN_ID_r1`, and `frontier_release_RUN_ID` so repeated runs in one Codex task do not collide.
+1. Use run-scoped stage names such as `frontier_author_RUN_ID`, `frontier_hardener_RUN_ID`, `frontier_review_RUN_ID_r1`, `frontier_repair_RUN_ID_rN`, and `frontier_release_RUN_ID` so repeated runs in one Codex task do not collide.
 2. Before spawning, use `list_agents`. If the run-scoped agent already exists, wait when it is running or use `followup_task` when it is idle; never create a duplicate stage agent for the same run.
 3. Wait for each dependency-producing agent before spawning the next stage.
 4. Use `followup_task` only to complete missing stage artifacts, correct an invalid stage report, or perform the defined closure phase; do not coach a reviewer toward a verdict.
@@ -62,25 +65,24 @@ AUTHORING
 
 ## Runtime lifecycle
 
-- Run Harbor/Docker preflight before every runtime-producing stage, not only once at pipeline start.
+- Run Harbor/Docker preflight before every runtime-producing stage, not only once at pipeline start. Harbor is the local oracle/nop runtime harness; the official `harbor check` is external.
 - On Windows, set Python UTF-8 variables and use a short disposable task/rubric/jobs root for long-path failures. Keep the source fingerprint stable.
 - Correct a stopped Docker daemon or transient runtime prerequisite before spawning a reviewer when existing authority permits; do not consume a review round on a preventable infrastructure-only failure.
-- Distinguish upstream/static evidence from a direct isolated verifier substitute. Record substitutes honestly; they do not silently become a Harbor static pass.
+- Distinguish upstream/static evidence from a direct isolated verifier substitute. Record substitutes honestly; they never count as the external Harbor official check.
 
 ## Failure rules
 
 - Missing collaboration tools: stop; independent review cannot be simulated.
 - Author output missing or structurally invalid after one follow-up: stop.
-- Hardener output missing, structurally invalid, or lacking complete source sweeps after one follow-up: stop before the counted review.
+- Hardener output missing, structurally invalid, or lacking complete source sweeps after one follow-up: stop before the counted internal review.
 - Reviewer report invalid after one follow-up: stop.
 - Submission fingerprint changed during review: invalidate that review and stop unless the change is proven to be disposable-copy output.
-- Release snapshot or extracted archive fingerprint differs from the passing review: stop release and return to repair plus fresh review.
+- Release snapshot or extracted archive fingerprint differs from the passing internal review: stop release and return to repair plus fresh review.
 - `PROVISIONAL` caused by missing infrastructure: stop unless the missing check can be run within existing authority.
 - Repeated identical blocker/major finding fingerprint across two consecutive repair rounds: stop with `BLOCKED`; the repairer is not converging.
-
 - Repair ledger stale or invalid: stop and require a new review or corrected ledger.
-- Explicit user-supplied repair cap reached without `PASS`: stop and report the latest evidence. With no explicit cap, continue the evidence-backed repair/re-review loop until `PASS` or a genuine blocker.
-- An archive created before the passing review is stale and must not be published or described as a release artifact.
+- Explicit user-supplied repair cap reached without internal `PASS`: stop and report the latest evidence. With no explicit cap, continue the evidence-backed internal review loop until internal `PASS` or a genuine blocker.
+- An archive created before the passing internal review is stale and must not be published or described as a release artifact.
 
 ## Approval boundary
 

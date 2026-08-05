@@ -29,5 +29,5 @@ Use `codex plugin marketplace list` to confirm the marketplace name if it differ
 After installing, confirm in a new task:
 
 - The plugin shows four skills: `$run-wh-frontier-pipeline`, `$create-wh-frontier-tasks`, `$verify-wh-frontier-tasks`, `$repair-wh-frontier-tasks`.
-- `$run-wh-frontier-pipeline` can resolve all seven supported reference names.
-- `docker version` and `harbor --version` work in your environment before running the pipeline.
+- `$run-wh-frontier-pipeline` can resolve all seven supported reference names and runs an internal review loop (r1, r2, ?) until internal `PASS`.
+- `docker version` and `harbor --version` work in your environment (Harbor is used only as the local oracle/nop runtime harness; the official `harbor check` runs externally).

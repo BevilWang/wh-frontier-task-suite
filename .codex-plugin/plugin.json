@@ -1,7 +1,7 @@
 {
   "name": "wh-frontier-task-suite",
-  "version": "0.8.2+codex.20260804223728",
-  "description": "Create three Frontier-Bench tasks and carry them through pre-review hardening, exhaustive independent audit, repair, re-review, and immutable release.",
+  "version": "0.9.0+codex.20260805120000",
+  "description": "Create three Frontier-Bench tasks and carry them through pre-review hardening and an internal review loop (r1, r2, ...) until internal PASS, then release an immutable archive; Harbor's official check is external.",
   "author": {
     "name": "BevilWang",
     "email": "wanghan.scut@gmail.com",
@@ -21,8 +21,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "WH Frontier Task Suite",
-    "shortDescription": "Create, harden, review, repair, and release three tasks.",
-    "longDescription": "A coordinated Codex workflow with seven bundled Frontier-Bench references. It spawns isolated author, pre-review hardener, reviewer, repair, re-review, and release agents; enforces exhaustive contract, input/domain, verifier, and runtime gates; repairs until PASS by default; and publishes only an immutable submission that matches a fresh passing review.",
+    "shortDescription": "Create, harden, internally review, repair, and release three tasks.",
+    "longDescription": "A coordinated Codex workflow with seven bundled Frontier-Bench references. It spawns isolated author, pre-review hardener, reviewer, repair, re-review, and release agents; enforces exhaustive contract, input/domain, verifier, and runtime gates; runs an internal review loop r1, r2, ... until internal PASS; and publishes only an immutable submission that matches the passing internal review. Harbor's official check is a separate external step documented in the README.",
     "developerName": "BevilWang",
     "category": "Developer Tools",
     "capabilities": [
@@ -33,7 +33,7 @@
     ],
     "websiteURL": "https://github.com/BevilWang/wh-frontier-task-suite",
     "defaultPrompt": [
-      "Run the complete multi-agent Frontier-Bench pipeline from authoring and hardening through immutable release.",
+      "Run the complete multi-agent Frontier-Bench pipeline from authoring through the internal review loop and immutable release.",
       "Create three original Frontier-Bench tasks from one supported reference.",
       "Independently audit or repair a three-task Frontier-Bench submission."
     ]
