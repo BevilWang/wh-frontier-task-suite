@@ -1,11 +1,11 @@
 {
-  "name": "wh-frontier-task-suite",
+  "name": "frontier-task-suite",
   "interface": {
-    "displayName": "WH Frontier Task Suite"
+    "displayName": "Frontier Task Suite"
   },
   "plugins": [
     {
-      "name": "wh-frontier-task-suite",
+      "name": "frontier-task-suite",
       "source": {
         "source": "local",
         "path": "."

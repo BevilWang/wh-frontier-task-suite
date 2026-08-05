@@ -2,7 +2,7 @@
 """Validate the Codex plugin manifest, marketplace entry, skills, and repo hygiene.
 
 This supersedes the pre-refactor release validator: the plugin now lives at the
-repository root instead of under plugins/wh-frontier-task-suite/, so all paths
+repository root instead of under plugins/frontier-task-suite/, so all paths
 and expectations were rewritten for the current layout.
 """
 
@@ -13,8 +13,8 @@ import json
 import re
 from pathlib import Path
 
-PLUGIN_NAME = "wh-frontier-task-suite"
-REPOSITORY = "https://github.com/BevilWang/wh-frontier-task-suite"
+PLUGIN_NAME = "frontier-task-suite"
+REPOSITORY = "https://github.com/BevilWang/Frontier-Task-Suite"
 AUTHOR_EMAIL = "wanghan.scut@gmail.com"
 EXPECTED_LICENSE = "MIT"
 EXPECTED_SKILLS = {

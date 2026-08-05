@@ -18,17 +18,17 @@ def make_repo(tmp: Path) -> None:
     (tmp / "skills").mkdir()
     (tmp / "fb" / "t" / "rs" / "tests" / "fixtures" / "files").mkdir(parents=True)
     manifest = {
-        "name": "wh-frontier-task-suite",
+        "name": "frontier-task-suite",
         "version": "0.8.2+codex.20260805000000",
         "description": "test",
         "author": {"name": "BevilWang", "email": "wanghan.scut@gmail.com", "url": "https://github.com/BevilWang"},
-        "homepage": "https://github.com/BevilWang/wh-frontier-task-suite#readme",
-        "repository": "https://github.com/BevilWang/wh-frontier-task-suite",
+        "homepage": "https://github.com/BevilWang/Frontier-Task-Suite#readme",
+        "repository": "https://github.com/BevilWang/Frontier-Task-Suite",
         "license": "MIT",
         "keywords": [],
         "skills": "./skills/",
         "interface": {
-            "displayName": "WH Frontier Task Suite",
+            "displayName": "Frontier Task Suite",
             "shortDescription": "s",
             "longDescription": "l",
             "developerName": "BevilWang",
@@ -38,11 +38,11 @@ def make_repo(tmp: Path) -> None:
     }
     (tmp / ".codex-plugin" / "plugin.json").write_text(json.dumps(manifest), encoding="utf-8")
     marketplace = {
-        "name": "wh-frontier-task-suite",
-        "interface": {"displayName": "WH Frontier Task Suite"},
+        "name": "frontier-task-suite",
+        "interface": {"displayName": "Frontier Task Suite"},
         "plugins": [
             {
-                "name": "wh-frontier-task-suite",
+                "name": "frontier-task-suite",
                 "source": {"source": "local", "path": "."},
                 "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
                 "category": "Developer Tools",

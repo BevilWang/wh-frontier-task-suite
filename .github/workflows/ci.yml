@@ -14,9 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows and Linux cover the two things this repo must guarantee:
-        # Windows-safe paths/checkouts and LF shell scripts for Linux containers.
-        os: [ubuntu-latest, windows-latest]
+        # Windows, macOS, and Linux: the repo must stay cross-platform
+        # (Windows-safe paths/checkouts, UTF-8 handling, and LF shell scripts
+        # for Linux containers).
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -43,5 +44,5 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $target = Join-Path $env:RUNNER_TEMP 'codex-app-cache\personal\wh-frontier-task-suite\0.9.0\workspace\repository'
+          $target = Join-Path $env:RUNNER_TEMP 'codex-app-cache\personal\frontier-task-suite\0.9.0\workspace\repository'
           git -c core.longpaths=false clone --no-hardlinks . $target
