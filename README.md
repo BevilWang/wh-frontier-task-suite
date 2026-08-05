@@ -1,6 +1,6 @@
 # WH Frontier Task Suite
 
-一个用于**创作、加固、内部评审并发布**三道原创 Frontier-Bench/Harbor 任务的 Codex 插件：以内置的一道参考题为校准基准，经 **内部评审循环 r1、r2、…直到内部 PASS** 后发布不可变压缩包。
+一个用于**创作、加固、评审、修复并发布**三道原创 Frontier-Bench/Harbor 任务的 Codex 插件：以内置的一道参考题为校准基准，经 **内部评审循环 r1、r2、…直到内部 PASS** 后发布不可变压缩包。
 
 ## 工作流程
 
@@ -8,7 +8,8 @@
 
 - **创作（Author）**：为每道任务生成原创目标、Agent 环境、oracle 参考解、验证器与元数据。
 - **加固（Harden）**：在评审前完成契约、输入域、对抗与运行时四轮扫描。
-- **内部评审循环（r1、r2、…）**：由全新独立 AI 执行语义评审，并收集确定性 oracle、nop 与内置静态检查证据；`FAIL` 则依据评审发现修复并进入下一轮 `rN+1` 重新评审，直到 **内部 PASS**。
+- **评审（Review）**：由全新独立 AI 执行语义评审，并收集确定性 oracle、nop 与内置静态检查证据，构成内部评审循环的一轮（r1、r2、…）。
+- **修复（Repair）**：依据评审发现修复，进入下一轮 `rN+1` 重新评审，直到 **内部 PASS**。
 - **发布（Release）**：只发布与通过内部评审的源码指纹完全一致的不可变压缩包。
 
 插件内置参考任务、校验脚本与评审工具，无需另外克隆 Frontier-Bench 仓库。
@@ -63,7 +64,7 @@ codex plugin add wh-frontier-task-suite@wh-frontier-task-suite
 
 | 技能 | 适用场景 |
 | --- | --- |
-| `$run-wh-frontier-pipeline` | 跑完整生命周期：创作 → 内部评审循环 → 发布。 |
+| `$run-wh-frontier-pipeline` | 跑完整生命周期：创作 → 加固 → 评审 → 修复 → 发布。 |
 | `$create-wh-frontier-tasks` | 单独创建或校验三题提交包。 |
 | `$verify-wh-frontier-tasks` | 独立审计已有三题提交包。 |
 | `$repair-wh-frontier-tasks` | 依据内部评审发现修复并准备下一轮复审。 |
