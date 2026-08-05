@@ -1,4 +1,4 @@
-# WH Frontier Task Suite
+# Frontier Task Suite
 
 一个用于**创作、加固、评审、修复并发布**三道原创 Frontier-Bench/Harbor 任务的 Codex 插件：从内置参考题出发，经 **内部评审循环 r1、r2、…直到内部 PASS** 后发布不可变压缩包，无需另外克隆 Frontier-Bench 仓库。
 
