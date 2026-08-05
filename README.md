@@ -66,6 +66,7 @@ Codex app/CLI（多智能体协作）、Python 3.12+、Docker（daemon 运行中
 联系方式：name@example.com
 提交日期：20260805
 ```
+可选 `Maximum repair rounds: N`（默认 5）。
 
 ## 内置参考题
 
@@ -78,10 +79,6 @@ Codex app/CLI（多智能体协作）、Python 3.12+、Docker（daemon 运行中
 | Science / Physics | `ks-solver-cpp` |
 | ML / Inference | `vllm-deepseek-streaming` |
 | Science / Robotics | `biped-contact-dynamics` |
-
-可选 `Maximum repair rounds: N`（默认 5）。运行根 `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` 记录全部阶段产物、证据、评审、修复与 `pipeline-state.json`。
-
-交付物：`OWNER_submission/`（包 README + 三个 `task-N-<slug>`）、`OWNER_Category_Subcategory_YYYYMMDD.zip`、评审与修复证据（`review.json` / `repair-ledger.json`）。
 
 ## 许可证
 [MIT License](LICENSE)。内置参考材料来自 [harbor-framework/frontier-bench](https://github.com/harbor-framework/frontier-bench)（Apache-2.0）。
