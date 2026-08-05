@@ -61,11 +61,23 @@ Codex app/CLI（多智能体协作）、Python 3.12+、Docker（daemon 运行中
 使用 $run-wh-frontier-pipeline。
 
 参考题：wal-recovery-ordering
-工作目录：E:\path\to\writable-workspace
+工作目录：\path\to\writable-workspace
 提交人：Your Name
 联系方式：name@example.com
 提交日期：20260805
 ```
+
+## 内置参考题
+
+| Category | Reference |
+| --- | --- |
+| Software / Databases | `wal-recovery-ordering` |
+| Software / Data Engineering | `ontology-kg-querying` |
+| Software / Algorithms | `rs-archive-clone` |
+| Science / Math | `lean-midpoint-proof` |
+| Science / Physics | `ks-solver-cpp` |
+| ML / Inference | `vllm-deepseek-streaming` |
+| Science / Robotics | `biped-contact-dynamics` |
 
 可选 `Maximum repair rounds: N`（默认 5）。运行根 `WORKSPACE_ROOT/pipeline-runs/REFERENCE/DATE-TIME/` 记录全部阶段产物、证据、评审、修复与 `pipeline-state.json`。
 
